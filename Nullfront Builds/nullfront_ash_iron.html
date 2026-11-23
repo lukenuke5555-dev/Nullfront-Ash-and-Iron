@@ -1,0 +1,3262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NULLFRONT: Ash &amp; Iron</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0c0e;
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+    .font-stencil {
+      font-family: 'Black Ops One', Impact, sans-serif;
+      letter-spacing: 0.04em;
+    }
+    .font-mono-dice {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tactical-bg {
+      background-color: #0b0c0e;
+      background-image:
+        radial-gradient(circle at 50% 100%, rgba(234, 88, 12, 0.16), transparent 55%),
+        radial-gradient(circle at 50% 0%, rgba(148, 163, 184, 0.08), transparent 60%),
+        linear-gradient(to right, rgba(39, 39, 42, 0.45) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(39, 39, 42, 0.45) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 38px 38px, 38px 38px;
+    }
+    .steel-plate {
+      background: linear-gradient(180deg, rgba(28, 30, 34, 0.94) 0%, rgba(15, 16, 19, 0.97) 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 20px 50px rgba(0, 0, 0, 0.75);
+    }
+    .game-card {
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .game-card:hover {
+      transform: translateY(-4px);
+    }
+    .hand-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      z-index: 30;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.55); }
+      50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
+    }
+    .target-pulse {
+      animation: pulse-border 1.5s infinite;
+    }
+    @keyframes active-actor-glow {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.8), 0 0 18px rgba(251, 191, 36, 0.35); }
+      50% { box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.3), 0 0 24px rgba(251, 191, 36, 0.55); }
+    }
+    .actor-highlight {
+      animation: active-actor-glow 1.2s infinite;
+      border-color: #fbbf24 !important;
+    }
+  </style>
+</head>
+<body class="tactical-bg min-h-screen flex flex-col selection:bg-orange-500 selection:text-white">
+
+  <!-- ==================== TOP NAVIGATION BAR ==================== -->
+  <header class="border-b border-zinc-800/90 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-950 border border-orange-500/50 flex items-center justify-center shadow-lg shadow-orange-600/15">
+          <svg class="w-5 h-5 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="7"/>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-stencil text-base sm:text-lg tracking-wider text-zinc-100 leading-none">NULLFRONT</h1>
+          <span class="text-[10px] font-mono-dice uppercase tracking-[0.22em] text-orange-400 font-bold">ASH &amp; IRON</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnStepSpeed" onclick="cycleStepSpeed()" class="hidden px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-amber-300 text-xs font-semibold border border-zinc-700 transition cursor-pointer" title="Adjust Opponent Action Pacing">
+          Speed: Normal
+        </button>
+        <button id="btnOpenRules" onclick="openRulesModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold border border-zinc-700 transition cursor-pointer">
+          Field Manual
+        </button>
+        <button id="btnOpenDeckBuilder" onclick="openDeckModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-orange-300 text-xs font-semibold border border-zinc-700 transition flex items-center gap-1.5 cursor-pointer">
+          <span>Arsenal</span>
+          <span id="headerDeckCount" class="px-1.5 py-0.5 rounded bg-zinc-950 text-[10px] font-mono-dice text-orange-400">30/30</span>
+        </button>
+        <button id="btnReturnMenu" onclick="returnToMainMenu()" class="hidden px-2.5 py-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-200 text-xs font-semibold border border-rose-800/70 transition cursor-pointer">
+          Retreat
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN MENU VIEW ==================== -->
+  <main id="menuView" class="flex-1 flex items-center justify-center p-4 sm:p-6">
+    <div class="max-w-4xl w-full">
+      <div class="steel-plate rounded-2xl border border-zinc-700/80 p-5 sm:p-8 text-center relative overflow-hidden">
+        <!-- Corner Rivets -->
+        <span class="w-2 h-2 rounded-full bg-zinc-600 absolute top-3 left-3 shadow-inner"></span>
+        <span class="w-2 h-2 rounded-full bg-zinc-600 absolute top-3 right-3 shadow-inner"></span>
+        <span class="w-2 h-2 rounded-full bg-zinc-600 absolute bottom-3 left-3 shadow-inner"></span>
+        <span class="w-2 h-2 rounded-full bg-zinc-600 absolute bottom-3 right-3 shadow-inner"></span>
+
+        <!-- NULLFRONT: ASH & IRON Emblem Crest -->
+        <div class="mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-2 relative flex items-center justify-center">
+          <svg class="w-full h-full drop-shadow-[0_0_22px_rgba(234,88,12,0.45)]" viewBox="0 0 160 160" fill="none">
+            <circle cx="80" cy="80" r="62" stroke="#9a3412" stroke-width="12" stroke-dasharray="14 6"/>
+            <circle cx="80" cy="80" r="56" stroke="#d97706" stroke-width="2" stroke-opacity="0.5"/>
+            <circle cx="80" cy="80" r="48" fill="#121316" stroke="#52525b" stroke-width="3"/>
+            <path d="M52 108 C48 86, 62 72, 68 58 C72 68, 76 62, 82 46 C90 62, 98 68, 102 56 C110 72, 114 88, 108 108 Z" fill="url(#emberGrad)"/>
+            <rect x="52" y="92" width="56" height="12" rx="6" fill="#27272a" stroke="#f97316" stroke-width="2"/>
+            <path d="M58 92 L65 80 H95 L102 92 Z" fill="#3f3f46" stroke="#fb923c" stroke-width="1.8"/>
+            <rect x="68" y="70" width="22" height="10" rx="3" fill="#52525b" stroke="#fed7aa" stroke-width="1.5"/>
+            <line x1="90" y1="74" x2="118" y2="67" stroke="#e4e4e7" stroke-width="3.5" stroke-linecap="round"/>
+            <polygon points="118,67 128,62 123,69 129,71 119,70" fill="#f97316"/>
+            <defs>
+              <linearGradient id="emberGrad" x1="80" y1="46" x2="80" y2="108" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="50%" stop-color="#f97316"/>
+                <stop offset="100%" stop-color="#9a3412"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <h2 class="font-stencil text-3xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-b from-zinc-100 via-zinc-300 to-zinc-500 drop-shadow">
+          NULLFRONT
+        </h2>
+        <div class="flex items-center justify-center gap-2 my-1 text-zinc-500 text-xs select-none" aria-hidden="true">
+          <span class="h-[1px] w-12 sm:w-20 bg-gradient-to-r from-transparent via-zinc-500 to-zinc-400"></span>
+          <span class="tracking-widest text-zinc-400">⚔ ✕ ⚔</span>
+          <span class="h-[1px] w-12 sm:w-20 bg-gradient-to-l from-transparent via-zinc-500 to-zinc-400"></span>
+        </div>
+        <div class="font-stencil text-base sm:text-xl tracking-[0.25em] text-orange-500 mb-1.5">
+          ASH &amp; IRON
+        </div>
+        <p class="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto mb-5">
+          Three doctrines clash across the scorched borderlands. Choose your allegiance and command the front.
+        </p>
+
+        <!-- 3-Faction Allegiance Selector -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5 text-left">
+          <!-- THE IRON VANGUARD -->
+          <button id="btnSelectVanguard" type="button" onclick="selectFaction('vanguard')" class="faction-card group rounded-xl border-2 border-sky-400/80 bg-gradient-to-b from-slate-800/90 to-zinc-950 p-3.5 transition cursor-pointer shadow-[0_0_25px_rgba(56,189,248,0.18)] flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2.5 mb-2">
+                <svg class="w-9 h-9 shrink-0 text-sky-300" viewBox="0 0 64 64" fill="none">
+                  <circle cx="32" cy="32" r="28" fill="#0f172a" stroke="#7dd3fc" stroke-width="2.5"/>
+                  <path d="M18 22 L32 15 L46 22 V36 C46 45 32 51 32 51 C32 51 18 45 18 36 Z" fill="#1e293b" stroke="#bae6fd" stroke-width="2"/>
+                  <rect x="26" y="24" width="12" height="20" fill="#cbd5e1"/>
+                  <path d="M24 24 H40 V21 H37 V23 H34 V21 H30 V23 H27 V21 H24 Z" fill="#f8fafc"/>
+                  <line x1="32" y1="21" x2="45" y2="13" stroke="#e0f2fe" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <div>
+                  <div class="text-[9px] font-mono-dice uppercase tracking-wider text-sky-400 font-bold">Allegiance</div>
+                  <div class="font-stencil text-xs sm:text-sm text-sky-100 leading-tight">THE IRON VANGUARD</div>
+                </div>
+              </div>
+              <p class="text-[11px] text-zinc-400 leading-snug mb-2">
+                Armored bastion doctrine. Steel fortifications, disciplined artillery, and unyielding defense.
+              </p>
+            </div>
+            <div class="pt-1.5 border-t border-slate-800/80 text-[10px] font-mono-dice text-sky-300/90">
+              IV Cards: up to 3 • Neutral: up to 2
+            </div>
+          </button>
+
+          <!-- THE ASHEN ACCORD -->
+          <button id="btnSelectAccord" type="button" onclick="selectFaction('accord')" class="faction-card group rounded-xl border-2 border-zinc-800 hover:border-orange-500/60 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition cursor-pointer opacity-80 hover:opacity-100 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2.5 mb-2">
+                <svg class="w-9 h-9 shrink-0 text-orange-400" viewBox="0 0 64 64" fill="none">
+                  <circle cx="32" cy="32" r="26" stroke="#ea580c" stroke-width="4" stroke-dasharray="7 3"/>
+                  <circle cx="32" cy="32" r="21" fill="#18181b"/>
+                  <path d="M22 44 C20 33 27 25 32 18 C37 25 44 33 42 44 Z" fill="#f97316"/>
+                  <path d="M27 46 V35 H37 V46 Z" fill="#a1a1aa" stroke="#27272a" stroke-width="1.5"/>
+                  <path d="M26 32 L38 20 L43 25 L31 37 Z" fill="#d4d4d8" stroke="#18181b" stroke-width="1.5"/>
+                </svg>
+                <div>
+                  <div class="text-[9px] font-mono-dice uppercase tracking-wider text-orange-400 font-bold">Allegiance</div>
+                  <div class="font-stencil text-xs sm:text-sm text-orange-100 leading-tight">THE ASHEN ACCORD</div>
+                </div>
+              </div>
+              <p class="text-[11px] text-zinc-400 leading-snug mb-2">
+                Scorched-earth insurgency. Relentless ordnance, chemical warfare, and ruthless strike tactics.
+              </p>
+            </div>
+            <div class="pt-1.5 border-t border-zinc-800/80 text-[10px] font-mono-dice text-orange-300/90">
+              AA Cards: up to 3 • Neutral: up to 2
+            </div>
+          </button>
+
+          <!-- THE DESERTERS -->
+          <button id="btnSelectDeserters" type="button" onclick="selectFaction('deserters')" class="faction-card group rounded-xl border-2 border-zinc-800 hover:border-lime-500/60 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition cursor-pointer opacity-80 hover:opacity-100 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2.5 mb-2">
+                <svg class="w-9 h-9 shrink-0 text-lime-400" viewBox="0 0 64 64" fill="none">
+                  <circle cx="32" cy="32" r="27" fill="#141812" stroke="#84cc16" stroke-width="2.5" stroke-dasharray="10 4"/>
+                  <path d="M20 20 L44 44 M44 20 L20 44" stroke="#a3a3a3" stroke-width="3.5" stroke-linecap="round"/>
+                  <circle cx="20" cy="20" r="3.5" fill="#65a30d" stroke="#1a2e05" stroke-width="1.5"/>
+                  <circle cx="44" cy="20" r="3.5" fill="#65a30d" stroke="#1a2e05" stroke-width="1.5"/>
+                  <path d="M25 26 L32 21 L39 26 V35 C39 40 32 44 32 44 C32 44 25 40 25 35 Z" fill="#27272a" stroke="#bef264" stroke-width="2"/>
+                  <line x1="27" y1="36" x2="37" y2="27" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                <div>
+                  <div class="text-[9px] font-mono-dice uppercase tracking-wider text-lime-400 font-bold">Rogue Coalition</div>
+                  <div class="font-stencil text-xs sm:text-sm text-lime-100 leading-tight">THE DESERTERS</div>
+                </div>
+              </div>
+              <p class="text-[11px] text-zinc-400 leading-snug mb-2">
+                Defectors armed with scavenged hardware from both sides. Unpredictable hybrid arsenals.
+              </p>
+            </div>
+            <div class="pt-1.5 border-t border-zinc-800/80 text-[10px] font-mono-dice text-lime-300/90">
+              IV/AA: up to 1 each • Neutral: up to 2
+            </div>
+          </button>
+        </div>
+
+        <!-- Primary Launch Controls -->
+        <div class="max-w-xl mx-auto space-y-2.5">
+          <button id="btnStartAI" type="button" onclick="startSoloAIMatch()" class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:to-amber-400 text-zinc-950 font-black text-sm sm:text-base tracking-wide uppercase shadow-lg shadow-orange-600/25 transition cursor-pointer">
+            Deploy vs. AI Commander
+          </button>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button id="btnCreateRoom" type="button" onclick="startHostP2PLobby()" class="py-2.5 px-4 rounded-xl bg-zinc-800/95 hover:bg-zinc-700 border border-zinc-600/80 text-zinc-100 font-bold text-xs sm:text-sm transition cursor-pointer">
+              Host 2-Device Match
+            </button>
+            <button id="btnOpenJoinModal" type="button" onclick="openGuestJoinModal()" class="py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold text-xs sm:text-sm transition cursor-pointer">
+              Join Friend's Match
+            </button>
+          </div>
+        </div>
+
+        <!-- Compact Arsenal Bar -->
+        <div class="mt-5 pt-4 border-t border-zinc-800/90 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400">
+          <span id="menuDeckTitle" class="font-mono-dice text-[11px] text-zinc-300">Active Deck: Iron Vanguard (30/30) • IV: 30 | AA: 30 | DES: 30</span>
+          <button id="btnMenuCustomizeDeck" type="button" onclick="openDeckModal()" class="text-orange-400 hover:text-orange-300 font-bold underline underline-offset-4 cursor-pointer">
+            Edit Arsenal
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== PEER-TO-PEER HOST LOBBY OVERLAY ==================== -->
+  <div id="lobbyOverlay" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="max-w-lg w-full rounded-2xl border border-indigo-500/40 bg-slate-900 p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-white">Host 2-Device Match (Direct P2P)</h3>
+        <span id="hostStepPill" class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 text-[11px] font-bold">Step 1 of 2</span>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-300">1. Copy your Host Invite Code and send it to your friend:</label>
+        <div class="flex gap-2">
+          <textarea id="hostOfferOutput" readonly rows="3" placeholder="Generating secure P2P invite code..." class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 font-mono-dice text-[10px] text-indigo-300 focus:outline-none resize-none"></textarea>
+          <button type="button" onclick="copyTextField('hostOfferOutput', 'Host Invite Code copied! Send it to your friend.')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shrink-0 cursor-pointer">
+            Copy Code
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-slate-800">
+        <label class="block text-xs font-semibold text-slate-300">2. Paste your friend's Reply Code below to start the match:</label>
+        <textarea id="hostAnswerInput" rows="3" placeholder="Paste your friend's Reply Code here..." class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 font-mono-dice text-[10px] text-emerald-300 placeholder-slate-600 focus:outline-none focus:border-emerald-400 resize-none"></textarea>
+        <button type="button" onclick="completeHostP2PConnection()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer">
+          Connect &amp; Launch Match
+        </button>
+      </div>
+
+      <button type="button" onclick="closeLobbyOverlay()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 cursor-pointer">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== PEER-TO-PEER GUEST JOIN OVERLAY ==================== -->
+  <div id="guestJoinOverlay" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="max-w-lg w-full rounded-2xl border border-indigo-500/40 bg-slate-900 p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-white">Join Friend's Match (Direct P2P)</h3>
+        <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 text-[11px] font-bold">Guest Setup</span>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-300">1. Paste the Host Invite Code your friend sent you:</label>
+        <textarea id="guestOfferInput" rows="3" placeholder="Paste Host Invite Code here..." class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 font-mono-dice text-[10px] text-indigo-300 placeholder-slate-600 focus:outline-none focus:border-indigo-400 resize-none"></textarea>
+        <button type="button" onclick="generateGuestP2PAnswer()" class="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold text-xs transition cursor-pointer">
+          Generate Reply Code
+        </button>
+      </div>
+
+      <div id="guestAnswerSection" class="hidden space-y-2 pt-2 border-t border-slate-800">
+        <label class="block text-xs font-semibold text-emerald-300">2. Copy this Reply Code and send it back to the Host (match launches automatically once they paste it):</label>
+        <div class="flex gap-2">
+          <textarea id="guestAnswerOutput" readonly rows="3" class="w-full p-2.5 rounded-xl bg-slate-950 border border-emerald-500/40 font-mono-dice text-[10px] text-emerald-300 focus:outline-none resize-none"></textarea>
+          <button type="button" onclick="copyTextField('guestAnswerOutput', 'Reply Code copied! Send it back to the Host.')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shrink-0 cursor-pointer">
+            Copy Reply
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-400 text-center animate-pulse">Waiting for Host to complete handshake...</p>
+      </div>
+
+      <button type="button" onclick="closeGuestJoinOverlay()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 cursor-pointer">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== GAME TABLE VIEW ==================== -->
+  <section id="gameView" class="hidden flex-1 flex flex-col max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 gap-2">
+
+    <!-- TOP BAR: OPPONENT STATUS & SCORE -->
+    <div class="rounded-xl border border-slate-800 bg-slate-900/90 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shadow-md">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center font-extrabold text-rose-300 text-xs">
+          OPP
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="oppNameLabel" class="text-xs sm:text-sm font-bold text-white">Enemy Commander</span>
+            <span id="oppGasBadge" class="hidden px-2 py-0.5 rounded-full bg-lime-500/20 border border-lime-500/40 text-lime-300 text-[10px] font-bold">
+              ☣ GAS (<span id="oppGasTurns">0</span>t)
+            </span>
+          </div>
+          <div class="flex items-center gap-3 text-[11px] text-slate-400 font-mono-dice">
+            <span>Hand: <strong id="oppHandCount" class="text-slate-200">5</strong></span>
+            <span>Deck: <strong id="oppDeckCount" class="text-slate-200">25</strong></span>
+            <span>Discard: <strong id="oppDiscardCount" class="text-slate-200">0</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 bg-slate-950/90 px-3 py-1 rounded-lg border border-slate-800">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400 mr-1">Enemy Pts</span>
+          <div id="oppScorePips" class="flex gap-1"></div>
+          <span id="oppScoreText" class="ml-1 font-mono-dice text-xs font-extrabold text-white">0/5</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN ARENA: LEFT = COMPACT BATTLEFIELD, RIGHT = DICE & COMBAT LOG -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-2.5 items-start">
+
+      <!-- COMPACT BATTLEFIELD COLUMN (8 cols on desktop) -->
+      <div class="lg:col-span-8 flex flex-col gap-1.5 rounded-2xl border border-slate-800/90 bg-slate-950/75 p-2 sm:p-2.5 shadow-inner">
+
+        <!-- ENEMY 3-SLOT ROW -->
+        <div>
+          <div class="flex items-center justify-between mb-1 px-1">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-rose-400/90">Enemy Frontline (Left • Center • Right)</span>
+            <span id="enemyTargetHint" class="text-[11px] font-semibold text-amber-300"></span>
+          </div>
+          <div id="enemyBoardSlots" class="grid grid-cols-3 gap-2"></div>
+        </div>
+
+        <!-- COMPACT CENTER COMBAT DIVIDER & ACTION PROMPT BAR -->
+        <div id="actionPromptBar" class="rounded-xl border border-sky-500/35 bg-slate-900/95 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shadow-md">
+          <div class="flex items-center gap-2 min-w-0">
+            <span id="turnIndicatorBadge" class="shrink-0 px-2 py-0.5 rounded-md bg-sky-500 text-slate-950 font-extrabold text-[11px] uppercase tracking-wider">
+              YOUR TURN
+            </span>
+            <span id="promptInstructionText" class="text-xs font-medium text-slate-200 truncate">
+              Select a card in your hand or click one of your units to attack.
+            </span>
+          </div>
+          <button id="btnCancelSelection" type="button" onclick="cancelCurrentSelection()" class="hidden shrink-0 px-2.5 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-amber-300 border border-slate-700 cursor-pointer">
+            Cancel
+          </button>
+        </div>
+
+        <!-- PLAYER 3-SLOT ROW -->
+        <div>
+          <div class="flex items-center justify-between mb-1 px-1">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-sky-400/90">Your Frontline (Left • Center • Right)</span>
+            <span id="playerGasBadge" class="hidden px-2 py-0.5 rounded-full bg-lime-500/20 border border-lime-500/40 text-lime-300 text-[10px] font-bold">
+              ☣ ENEMY GAS ACTIVE (<span id="playerGasTurns">0</span>t left)
+            </span>
+          </div>
+          <div id="playerBoardSlots" class="grid grid-cols-3 gap-2"></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT SIDEBAR: FAIR DICE TRAY & LIVE COMBAT LOG (4 cols on desktop) -->
+      <div class="lg:col-span-4 flex flex-col gap-2">
+
+        <!-- FAIR RNG DICE ROLL DISPLAY -->
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-2.5 shadow-md">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-200">Fair Crypto Dice Tray</span>
+            </div>
+            <span class="text-[10px] font-mono-dice text-emerald-400">CSPRNG Verified</span>
+          </div>
+          <div id="diceTrayContent" class="rounded-xl bg-slate-950 border border-slate-800/90 p-2 min-h-[78px] flex flex-col justify-center text-xs">
+            <p class="text-slate-500 text-center italic">Every individual die rolled will appear here for 100% transparency.</p>
+          </div>
+        </div>
+
+        <!-- LIVE BATTLE LOG -->
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-2.5 flex flex-col h-[180px] sm:h-[205px] shadow-md">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300">Battle Log</span>
+            <span class="text-[10px] font-mono-dice text-slate-500">Turn <span id="turnNumberDisplay">1</span></span>
+          </div>
+          <div id="battleLogContainer" class="flex-1 overflow-y-auto space-y-1 pr-1 text-xs font-mono-dice"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PLAYER ACTION BAR & SCORE -->
+    <div class="rounded-xl border border-slate-800 bg-slate-900/95 px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-sky-400 mr-1">Your Pts</span>
+          <div id="playerScorePips" class="flex gap-1"></div>
+          <span id="playerScoreText" class="ml-1 font-mono-dice text-xs font-extrabold text-white">0/5</span>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 text-[11px] font-mono-dice text-slate-400">
+          <span>Deck: <strong id="playerDeckCount" class="text-white">25</strong></span>
+          <span>•</span>
+          <span>Discard: <strong id="playerDiscardCount" class="text-white">0</strong></span>
+        </div>
+      </div>
+
+      <!-- 3-Action Economy Pips + Used Action Badges -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+          <span class="text-[10px] font-bold uppercase text-slate-400">Actions:</span>
+          <div id="actionPipsContainer" class="flex gap-1"></div>
+        </div>
+        <div id="actionCategoryBadges" class="hidden md:flex items-center gap-1 text-[10px] font-semibold"></div>
+        <div id="bonusActionBadges" class="flex items-center gap-1"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button id="btnMulligan" type="button" onclick="handleMulliganClick()" class="hidden px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-bold text-xs transition cursor-pointer">
+          Mulligan Hand (1x)
+        </button>
+
+        <button id="btnToggleDiscardMode" type="button" onclick="toggleDiscardMode()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs transition cursor-pointer">
+          Discard Cards (0/3)
+        </button>
+
+        <button id="btnConfirmDiscard" type="button" onclick="confirmDiscardClick()" class="hidden px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition cursor-pointer">
+          Confirm Discard
+        </button>
+
+        <button id="btnEndTurn" type="button" onclick="handleEndTurnClick()" class="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition cursor-pointer">
+          End Turn
+        </button>
+      </div>
+    </div>
+
+    <!-- PLAYER HAND -->
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/85 p-2.5">
+      <div class="flex items-center justify-between mb-1.5 px-1">
+        <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300">
+          Your Hand (<span id="playerHandCount">5</span> cards)
+        </span>
+        <span class="text-[11px] text-slate-400">
+          End of turn: draw back up to 5 cards • Ending with 0 units in play loses!
+        </span>
+      </div>
+      <div id="playerHandContainer" class="flex items-stretch gap-2.5 overflow-x-auto pb-1.5 pt-1 px-1 min-h-[178px]"></div>
+    </div>
+
+  </section>
+
+  <!-- ==================== MODAL: DECK BUILDER & EXPANSION VIEWER ==================== -->
+  <div id="deckModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="p-4 sm:p-5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-extrabold text-white">Faction Arsenal &amp; Card Compendium</h3>
+          <p class="text-xs text-slate-400">30 cards total. IV &amp; AA allow up to 3 copies of their exclusives; Deserters allow any card (max 1 per exclusive). All decks allow up to 2 Neutrals.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="resetCurrentFactionDeck()" class="px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 text-xs font-bold cursor-pointer">
+            Reset Current Faction Preset
+          </button>
+          <span id="modalDeckCounter" class="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 font-mono-dice text-xs font-extrabold text-emerald-400">
+            30 / 30 Cards
+          </span>
+          <button type="button" onclick="closeDeckModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white cursor-pointer">
+            Done
+          </button>
+        </div>
+      </div>
+
+      <!-- Faction Deck Tabs -->
+      <div class="px-4 pt-3 pb-2 bg-slate-950/60 border-b border-slate-800 flex flex-wrap items-center gap-2">
+        <button id="btnDeckTabIV" type="button" onclick="switchDeckBuilderTab('vanguard')" class="px-3 py-2 rounded-xl border-2 border-sky-400 bg-sky-500/20 text-sky-200 font-stencil text-xs tracking-wide transition cursor-pointer">
+          IRON VANGUARD (<span id="tabCountIV">30</span>/30)
+        </button>
+        <button id="btnDeckTabAA" type="button" onclick="switchDeckBuilderTab('accord')" class="px-3 py-2 rounded-xl border-2 border-slate-800 bg-slate-900 text-slate-400 hover:text-orange-200 font-stencil text-xs tracking-wide transition cursor-pointer">
+          ASHEN ACCORD (<span id="tabCountAA">30</span>/30)
+        </button>
+        <button id="btnDeckTabDES" type="button" onclick="switchDeckBuilderTab('deserters')" class="px-3 py-2 rounded-xl border-2 border-slate-800 bg-slate-900 text-slate-400 hover:text-lime-200 font-stencil text-xs tracking-wide transition cursor-pointer">
+          THE DESERTERS (<span id="tabCountDES">30</span>/30)
+        </button>
+        <span id="deckBuilderLockHint" class="text-[11px] text-sky-300/90 ml-auto font-medium">
+          Iron Vanguard: Max 3 IV exclusives • Max 2 Neutral • AA locked
+        </span>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-6">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-xs font-extrabold uppercase">Starter Set (15 Cards)</span>
+            <span class="text-xs text-slate-400">Core infantry, armor, and tactical doctrine</span>
+          </div>
+          <div id="starterCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-xs font-extrabold uppercase">First Expansion (9 Cards)</span>
+            <span class="text-xs text-slate-400">Specialized strike units and heavy ordnance</span>
+          </div>
+          <div id="expansionCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: RULES REFERENCE ==================== -->
+  <div id="rulesModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[88vh] flex flex-col shadow-2xl">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-white">Field Manual — Official Game Rules</h3>
+        <button type="button" onclick="closeRulesModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white cursor-pointer">
+          Close
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <div>
+          <h4 class="font-bold text-sky-400 uppercase text-xs tracking-wider mb-1">1. Setup &amp; Mulligan</h4>
+          <p>Each player uses a 30-card faction deck (max 2 of any card) and draws 5 cards. If your opening hand has <strong>no Unit cards</strong>, it is automatically revealed, reshuffled, and redrawn. If you have at least 1 Unit, you may optionally take a hidden Mulligan once before your first turn.</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-emerald-400 uppercase text-xs tracking-wider mb-1">2. Winning &amp; Losing</h4>
+          <p>First player to reach <strong>5 points</strong> wins. You score 1 point whenever your unit destroys an enemy unit in combat or with direct damage effects. Additionally, if you <strong>end your turn with 0 units in play</strong>, you immediately lose!</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-amber-400 uppercase text-xs tracking-wider mb-1">3. Your Turn (Up to 3 Actions)</h4>
+          <p>Take up to 3 different actions per turn: <strong>Play a Unit</strong>, <strong>Play a Tactical</strong>, <strong>Equip an Equipment</strong>, <strong>Attack</strong>, or <strong>Discard up to 3 cards</strong>. You cannot repeat the same action type in one turn unless a card grants an extra free action. At the end of your turn, draw until you have 5 cards.</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-rose-400 uppercase text-xs tracking-wider mb-1">4. Two-Step Dice Combat</h4>
+          <p><strong>Step 1 (Hit Check):</strong> Attacker rolls Accuracy vs. Defender Evasion. If Accuracy is strictly higher, it hits.<br>
+          <strong>Step 2 (Damage Check):</strong> Attacker rolls Damage vs. Defender Defense. If Damage is strictly higher, the defender (and its attached equipment) is discarded and the attacker scores 1 point.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FLOATING NON-BLOCKING TACTICAL / INTERCEPT WINDOW ==================== -->
+  <div id="interceptModal" class="hidden fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100%-2rem)] max-w-sm pointer-events-auto">
+    <div class="bg-slate-900/95 backdrop-blur-md border-2 border-purple-500/80 rounded-2xl w-full p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <span id="interceptWindowBadge" class="px-2 py-0.5 rounded-md bg-purple-500/25 border border-purple-400/50 text-purple-300 font-extrabold text-[11px] uppercase tracking-wider">
+          ⚡ Enemy Tactical Card Played
+        </span>
+        <span id="interceptStepLabel" class="text-[10px] font-mono-dice text-slate-400">Response Window</span>
+      </div>
+
+      <div class="rounded-xl border border-purple-400/40 bg-gradient-to-b from-slate-800 to-slate-950 p-3 space-y-1.5 shadow-inner">
+        <div class="flex items-center justify-between">
+          <span class="text-[9px] font-extrabold uppercase tracking-widest text-purple-400">Tactical Card</span>
+          <span id="interceptCardCost" class="text-[10px] font-mono-dice text-slate-400">1 Action</span>
+        </div>
+        <h3 id="interceptCardName" class="text-base sm:text-lg font-black text-white leading-tight">Tactical Name</h3>
+        <p id="interceptCardTargetInfo" class="text-[11px] font-semibold text-amber-300"></p>
+        <p id="interceptCardEffect" class="text-xs text-slate-200 leading-relaxed bg-slate-950/75 p-2 rounded-lg border border-slate-800">
+          Effect text appears here.
+        </p>
+      </div>
+
+      <p id="interceptPromptText" class="text-xs text-slate-300 leading-relaxed">
+        You have <strong>Intercept</strong> in your hand! Discard it to counter this Tactical card?
+      </p>
+
+      <div id="interceptChoiceButtons" class="flex gap-2">
+        <button type="button" onclick="respondToTacticalWindow(true)" class="flex-1 py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition cursor-pointer">
+          Counter with Intercept!
+        </button>
+        <button type="button" onclick="respondToTacticalWindow(false)" class="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition cursor-pointer">
+          Let it Resolve
+        </button>
+      </div>
+
+      <div id="interceptAcknowledgeContainer" class="hidden">
+        <button type="button" onclick="respondToTacticalWindow(false)" class="w-full py-2 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs transition cursor-pointer">
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: SIGNAL JAM REARRANGER ==================== -->
+  <div id="signalJamModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-indigo-500/50 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4">
+      <h3 class="text-base font-extrabold text-white">Signal Jam — Rearrange Enemy Units</h3>
+      <p class="text-xs text-slate-400">Select two enemy slots to swap their units (attached equipment stays with each unit).</p>
+      <div id="signalJamSlots" class="grid grid-cols-3 gap-2"></div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="finishSignalJam()" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs cursor-pointer">
+          Confirm Positions
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: GAME OVER ==================== -->
+  <div id="gameOverModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl space-y-4">
+      <div id="gameOverBadge" class="inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest bg-emerald-500/20 text-emerald-300">
+        VICTORY
+      </div>
+      <h2 id="gameOverTitle" class="text-2xl sm:text-3xl font-black text-white">You Won the Match!</h2>
+      <p id="gameOverReason" class="text-sm text-slate-300">You reached 5 points first.</p>
+      <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex justify-around font-mono-dice text-sm">
+        <div>
+          <div class="text-[10px] text-slate-400 uppercase">Your Score</div>
+          <div id="finalPlayerScore" class="text-xl font-black text-sky-400">5</div>
+        </div>
+        <div>
+          <div class="text-[10px] text-slate-400 uppercase">Enemy Score</div>
+          <div id="finalOppScore" class="text-xl font-black text-rose-400">2</div>
+        </div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="playAgainClick()" class="flex-1 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-sm cursor-pointer">
+          Play Again
+        </button>
+        <button type="button" onclick="returnToMainMenu()" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm cursor-pointer">
+          Main Menu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div id="toastBanner" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-slate-900 border border-amber-500/60 text-amber-200 text-xs font-bold shadow-2xl"></div>
+
+  <!-- ==================== COMPLETE, SELF-CONTAINED GAME ENGINE ==================== -->
+  <script>
+    // =========================================================================
+    // 1. CRYPTOGRAPHICALLY FAIR RNG & DICE ENGINE (CSPRNG)
+    // =========================================================================
+    function cryptoRandomInt(min, max) {
+      const range = max - min + 1;
+      const maxValid = Math.floor(0x100000000 / range) * range;
+      const buf = new Uint32Array(1);
+      let val;
+      do {
+        window.crypto.getRandomValues(buf);
+        val = buf[0];
+      } while (val >= maxValid);
+      return min + (val % range);
+    }
+
+    function cryptoShuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = cryptoRandomInt(0, i);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function rollDiceFormula(diceCount, flatBonus = 0, luckyPendant = false) {
+      const actualDice = diceCount > 0 ? diceCount + (luckyPendant ? 1 : 0) : 0;
+      const rolls = [];
+      for (let i = 0; i < actualDice; i++) {
+        rolls.push(cryptoRandomInt(1, 6));
+      }
+      let dropped = null;
+      let kept = [...rolls];
+      if (luckyPendant && diceCount > 0 && kept.length > 1) {
+        let minIdx = 0;
+        for (let i = 1; i < kept.length; i++) {
+          if (kept[i] < kept[minIdx]) minIdx = i;
+        }
+        dropped = kept[minIdx];
+        kept.splice(minIdx, 1);
+      }
+      const sum = kept.reduce((acc, v) => acc + v, 0) + flatBonus;
+      return {
+        rolls,
+        dropped,
+        bonus: flatBonus,
+        total: sum
+      };
+    }
+
+    // =========================================================================
+    // 2. COMPLETE 24-CARD CATALOG (STARTER 15 + FIRST EXPANSION 9)
+    // =========================================================================
+    const CARD_CATALOG = {
+      // --- STARTER SET (15 CARDS) ---
+      wall: {
+        id: 'wall',
+        name: 'Wall',
+        set: 'starter',
+        faction: 'NEUTRAL',
+        type: 'unit',
+        acc: 0,
+        dmg: 0,
+        dmgBonus: 0,
+        eva: 0,
+        def: 3,
+        canAttack: false,
+        effectText: 'Adjacent friendly units cannot be attacked.'
+      },
+      tank: {
+        id: 'tank',
+        name: 'Vanguard Tank',
+        set: 'starter',
+        faction: 'IV',
+        type: 'unit',
+        acc: 1,
+        dmg: 5,
+        dmgBonus: 0,
+        eva: 1,
+        def: 3,
+        canAttack: true,
+        effectText: ''
+      },
+      engineer: {
+        id: 'engineer',
+        name: 'Vanguard Engineer',
+        set: 'starter',
+        faction: 'IV',
+        type: 'unit',
+        acc: 2,
+        dmg: 2,
+        dmgBonus: 0,
+        eva: 1,
+        def: 2,
+        canAttack: true,
+        effectText: 'Adjacent units get an additional +2 to all defense rolls.'
+      },
+      medic: {
+        id: 'medic',
+        name: 'Medic',
+        set: 'starter',
+        faction: 'NEUTRAL',
+        type: 'unit',
+        acc: 0,
+        dmg: 0,
+        dmgBonus: 0,
+        eva: 2,
+        def: 2,
+        canAttack: false,
+        effectText: 'The first time an adjacent unit would die: instead reroll attack and defense.'
+      },
+      soldier: {
+        id: 'soldier',
+        name: 'Soldier',
+        set: 'starter',
+        faction: 'NEUTRAL',
+        type: 'unit',
+        acc: 2,
+        dmg: 2,
+        dmgBonus: 0,
+        eva: 2,
+        def: 2,
+        canAttack: true,
+        effectText: ''
+      },
+      mortar: {
+        id: 'mortar',
+        name: 'Ashen Mortar',
+        set: 'starter',
+        faction: 'AA',
+        type: 'unit',
+        acc: 2,
+        dmg: 4,
+        dmgBonus: 0,
+        eva: 3,
+        def: 1,
+        canAttack: true,
+        effectText: 'When attack hits: deal 1D6 damage to each unit adjacent to the target.'
+      },
+      laser_sight: {
+        id: 'laser_sight',
+        name: 'Laser Sight',
+        set: 'starter',
+        faction: 'NEUTRAL',
+        type: 'equipment',
+        modAcc: 2,
+        modDmg: 1,
+        modEva: 0,
+        modDef: 0,
+        statBadge: '+2D6 Acc | +1D6 Dmg',
+        effectText: 'Equipped unit gains +2D6 Accuracy and +1D6 Damage.'
+      },
+      exoskeleton: {
+        id: 'exoskeleton',
+        name: 'Exoskeleton',
+        set: 'starter',
+        faction: 'NEUTRAL',
+        type: 'equipment',
+        modAcc: 0,
+        modDmg: 0,
+        modEva: 2,
+        modDef: 0,
+        statBadge: '+2D6 Eva',
+        effectText: 'Equipped unit gains +2D6 Evasion.'
+      },
+      body_armor: {
+        id: 'body_armor',
+        name: 'Body Armor',
+        set: 'starter',
+        faction: 'IV',
+        type: 'equipment',
+        modAcc: 0,
+        modDmg: 0,
+        modEva: 0,
+        modDef: 2,
+        statBadge: '+2D6 Def',
+        effectText: 'Equipped unit gains +2D6 Defense.'
+      },
+      retreat: {
+        id: 'retreat',
+        name: 'Retreat',
+        set: 'starter',
+        faction: 'NEUTRAL',
+        type: 'tactical',
+        actionCost: 1,
+        targetType: 'any_unit',
+        effectText: 'Return a unit card and any attached equipment cards to their owner\'s hand.'
+      },
+      reinforcements: {
+        id: 'reinforcements',
+        name: 'Reinforcements',
+        set: 'starter',
+        faction: 'NEUTRAL',
+        type: 'tactical',
+        actionCost: 1,
+        targetType: 'none',
+        effectText: 'Draw 4 cards. You may play an additional unit this turn.'
+      },
+      gas: {
+        id: 'gas',
+        name: 'Gas',
+        set: 'starter',
+        faction: 'AA',
+        type: 'tactical',
+        actionCost: 1,
+        targetType: 'none',
+        effectText: 'For the next 4 turns: at the end of the turn deal 1D6 damage to each enemy unit.'
+      },
+      emp: {
+        id: 'emp',
+        name: 'EMP',
+        set: 'starter',
+        faction: 'IV',
+        type: 'tactical',
+        actionCost: 1,
+        targetType: 'enemy_equipped_unit',
+        effectText: 'Discard one of your opponent\'s equipment cards from their battlefield.'
+      },
+      drugged_army: {
+        id: 'drugged_army',
+        name: 'Drugged Army',
+        set: 'starter',
+        faction: 'AA',
+        type: 'tactical',
+        actionCost: 1,
+        targetType: 'none',
+        effectText: 'You may attack an additional time this turn.'
+      },
+      bio_warfare: {
+        id: 'bio_warfare',
+        name: 'Bio Warfare',
+        set: 'starter',
+        faction: 'AA',
+        type: 'tactical',
+        actionCost: 3,
+        targetType: 'none',
+        effectText: 'Return all cards on your opponent\'s battlefield to their hand. Requires 3 actions.'
+      },
+
+      // --- FIRST EXPANSION (9 CARDS) ---
+      assassin: {
+        id: 'assassin',
+        name: 'Ashen Assassin',
+        set: 'expansion',
+        faction: 'AA',
+        type: 'unit',
+        acc: 5,
+        dmg: 2,
+        dmgBonus: 0,
+        eva: 4,
+        def: 1,
+        canAttack: true,
+        effectText: 'When attacking, enemy unit effects do not apply.'
+      },
+      lucky_pendant: {
+        id: 'lucky_pendant',
+        name: 'Lucky Pendant',
+        set: 'expansion',
+        faction: 'NEUTRAL',
+        type: 'equipment',
+        modAcc: 0,
+        modDmg: 0,
+        modEva: 0,
+        modDef: 0,
+        statBadge: 'Advantage Dice',
+        effectText: 'When equipped unit rolls, roll an additional die and ignore the lowest roll.'
+      },
+      airplane: {
+        id: 'airplane',
+        name: 'Vanguard Jet',
+        set: 'expansion',
+        faction: 'IV',
+        type: 'unit',
+        acc: 2,
+        dmg: 2,
+        dmgBonus: 3,
+        eva: 4,
+        def: 2,
+        canAttack: true,
+        cannotEquip: true,
+        ignoreWall: true,
+        effectText: 'Cannot be equipped. May attack enemy units even if they are adjacent to a Wall.'
+      },
+      intercept: {
+        id: 'intercept',
+        name: 'Intercept',
+        set: 'expansion',
+        faction: 'NEUTRAL',
+        type: 'tactical',
+        actionCost: 0,
+        targetType: 'reaction',
+        effectText: 'Discard this card from your hand to counter the effects of an enemy tactical card.'
+      },
+      signal_jam: {
+        id: 'signal_jam',
+        name: 'Signal Jam',
+        set: 'expansion',
+        faction: 'NEUTRAL',
+        type: 'tactical',
+        actionCost: 1,
+        targetType: 'none',
+        effectText: 'Rearrange your enemy\'s units across Left, Center, and Right. Equipment stays attached.'
+      },
+      missile_strike: {
+        id: 'missile_strike',
+        name: 'Missile Strike',
+        set: 'expansion',
+        faction: 'IV',
+        type: 'tactical',
+        actionCost: 1,
+        targetType: 'enemy_unit',
+        effectText: 'Deal 5D6 damage to an enemy unit.'
+      },
+      nuke: {
+        id: 'nuke',
+        name: 'Nuke',
+        set: 'expansion',
+        faction: 'NEUTRAL',
+        type: 'tactical',
+        actionCost: 2,
+        targetType: 'none',
+        effectText: 'Discard all cards on the battlefield. Those cards do not score. Uses 2 actions.'
+      },
+      sniper: {
+        id: 'sniper',
+        name: 'Ashen Sniper',
+        set: 'expansion',
+        faction: 'AA',
+        type: 'unit',
+        acc: 4,
+        dmg: 3,
+        dmgBonus: 0,
+        eva: 2,
+        def: 1,
+        canAttack: true,
+        effectText: 'When attacking, Sniper bypasses all enemy stat changes.'
+      },
+      paratrooper: {
+        id: 'paratrooper',
+        name: 'Paratrooper',
+        set: 'expansion',
+        faction: 'NEUTRAL',
+        type: 'unit',
+        acc: 2,
+        dmg: 2,
+        dmgBonus: 0,
+        eva: 3,
+        def: 1,
+        canAttack: true,
+        effectText: 'When you play this unit, you may have it attack without using an action.'
+      }
+    };
+
+    const ALL_CARD_IDS = Object.keys(CARD_CATALOG);
+    const STARTER_IDS = ALL_CARD_IDS.filter(id => CARD_CATALOG[id].set === 'starter');
+    const EXPANSION_IDS = ALL_CARD_IDS.filter(id => CARD_CATALOG[id].set === 'expansion');
+
+    // =========================================================================
+    // 3. FACTION-LOCKED 30-CARD DECKS & COPY LIMIT RULES
+    // =========================================================================
+    const STORAGE_KEY_IV = 'nullfront_iv_deck_v5';
+    const STORAGE_KEY_AA = 'nullfront_aa_deck_v5';
+    const STORAGE_KEY_DES = 'nullfront_des_deck_v5';
+
+    let selectedFaction = 'vanguard'; // 'vanguard', 'accord', or 'deserters'
+    let editingDeckFaction = 'vanguard';
+    let ivDeckCounts = {};
+    let aaDeckCounts = {};
+    let desDeckCounts = {};
+
+    function getMaxCopiesForFaction(cardId, factionKey) {
+      const card = CARD_CATALOG[cardId];
+      if (!card) return 0;
+      if (card.faction === 'NEUTRAL') return 2;
+
+      if (factionKey === 'vanguard') {
+        return card.faction === 'IV' ? 3 : 0;
+      }
+      if (factionKey === 'accord') {
+        return card.faction === 'AA' ? 3 : 0;
+      }
+      if (factionKey === 'deserters') {
+        return (card.faction === 'IV' || card.faction === 'AA') ? 1 : 0;
+      }
+      return 0;
+    }
+
+    function isCardAllowedInFaction(cardId, factionKey) {
+      return getMaxCopiesForFaction(cardId, factionKey) > 0;
+    }
+
+    function getDefaultIVDeck() {
+      // 30 cards: IV (max 3): Tank(3), Engineer(3), Jet(2), Body Armor(2), EMP(2), Missile Strike(2) = 14
+      // Neutral (max 2): Soldier(2), Medic(2), Wall(2), Paratrooper(2), Laser Sight(2), Exoskeleton(2), Reinforcements(2), Intercept(2) = 16
+      const counts = {};
+      ALL_CARD_IDS.forEach(id => { counts[id] = 0; });
+      counts.tank = 3;
+      counts.engineer = 3;
+      counts.airplane = 2;
+      counts.body_armor = 2;
+      counts.emp = 2;
+      counts.missile_strike = 2;
+      ['soldier', 'medic', 'wall', 'paratrooper', 'laser_sight', 'exoskeleton', 'reinforcements', 'intercept'].forEach(id => {
+        counts[id] = 2;
+      });
+      return counts;
+    }
+
+    function getDefaultAADeck() {
+      // 30 cards: AA (max 3): Mortar(3), Assassin(3), Sniper(2), Gas(2), Drugged Army(2), Bio Warfare(2) = 14
+      // Neutral (max 2): Soldier(2), Medic(2), Wall(2), Paratrooper(2), Laser Sight(2), Lucky Pendant(2), Retreat(2), Intercept(2) = 16
+      const counts = {};
+      ALL_CARD_IDS.forEach(id => { counts[id] = 0; });
+      counts.mortar = 3;
+      counts.assassin = 3;
+      counts.sniper = 2;
+      counts.gas = 2;
+      counts.drugged_army = 2;
+      counts.bio_warfare = 2;
+      ['soldier', 'medic', 'wall', 'paratrooper', 'laser_sight', 'lucky_pendant', 'retreat', 'intercept'].forEach(id => {
+        counts[id] = 2;
+      });
+      return counts;
+    }
+
+    function getDefaultDesertersDeck() {
+      // 30 cards: All 6 IV exclusives (1 each = 6) + All 6 AA exclusives (1 each = 6) + 9 Neutrals (2 each = 18) = 30
+      const counts = {};
+      ALL_CARD_IDS.forEach(id => { counts[id] = 0; });
+      ['tank', 'engineer', 'airplane', 'body_armor', 'emp', 'missile_strike'].forEach(id => { counts[id] = 1; });
+      ['mortar', 'assassin', 'sniper', 'gas', 'drugged_army', 'bio_warfare'].forEach(id => { counts[id] = 1; });
+      ['soldier', 'medic', 'wall', 'paratrooper', 'laser_sight', 'exoskeleton', 'lucky_pendant', 'reinforcements', 'intercept'].forEach(id => {
+        counts[id] = 2;
+      });
+      return counts;
+    }
+
+    function sanitizeDeckCountsForFaction(rawCounts, factionKey, fallbackFactory) {
+      if (!rawCounts || typeof rawCounts !== 'object') return fallbackFactory();
+      const cleaned = {};
+      let sum = 0;
+      ALL_CARD_IDS.forEach(id => {
+        const maxAllowed = getMaxCopiesForFaction(id, factionKey);
+        if (maxAllowed === 0) {
+          cleaned[id] = 0;
+        } else {
+          const val = Math.max(0, Math.min(maxAllowed, Number(rawCounts[id]) || 0));
+          cleaned[id] = val;
+          sum += val;
+        }
+      });
+      return sum === 30 ? cleaned : fallbackFactory();
+    }
+
+    function loadSavedFactionDecks() {
+      try {
+        const savedIV = JSON.parse(localStorage.getItem(STORAGE_KEY_IV) || 'null');
+        const savedAA = JSON.parse(localStorage.getItem(STORAGE_KEY_AA) || 'null');
+        const savedDES = JSON.parse(localStorage.getItem(STORAGE_KEY_DES) || 'null');
+        ivDeckCounts = sanitizeDeckCountsForFaction(savedIV, 'vanguard', getDefaultIVDeck);
+        aaDeckCounts = sanitizeDeckCountsForFaction(savedAA, 'accord', getDefaultAADeck);
+        desDeckCounts = sanitizeDeckCountsForFaction(savedDES, 'deserters', getDefaultDesertersDeck);
+      } catch (e) {
+        ivDeckCounts = getDefaultIVDeck();
+        aaDeckCounts = getDefaultAADeck();
+        desDeckCounts = getDefaultDesertersDeck();
+      }
+    }
+
+    function saveFactionDecks() {
+      try {
+        localStorage.setItem(STORAGE_KEY_IV, JSON.stringify(ivDeckCounts));
+        localStorage.setItem(STORAGE_KEY_AA, JSON.stringify(aaDeckCounts));
+        localStorage.setItem(STORAGE_KEY_DES, JSON.stringify(desDeckCounts));
+      } catch (e) {}
+    }
+
+    function getDeckCountsForFaction(factionKey) {
+      if (factionKey === 'vanguard') return ivDeckCounts;
+      if (factionKey === 'accord') return aaDeckCounts;
+      return desDeckCounts;
+    }
+
+    function getActivePlayerDeckCounts() {
+      return getDeckCountsForFaction(selectedFaction);
+    }
+
+    function getFactionDisplayName(factionKey) {
+      if (factionKey === 'vanguard') return 'The Iron Vanguard';
+      if (factionKey === 'accord') return 'The Ashen Accord';
+      return 'The Deserters';
+    }
+
+    function getDeckTotalCount(countsObj) {
+      return Object.values(countsObj).reduce((a, b) => a + b, 0);
+    }
+
+    function buildDeckArrayFromCounts(countsMap) {
+      const deck = [];
+      let uidCounter = 1;
+      for (const [cardId, qty] of Object.entries(countsMap)) {
+        for (let i = 0; i < qty; i++) {
+          deck.push({ uid: `${cardId}_${uidCounter++}_${cryptoRandomInt(1000, 9999)}`, cardId });
+        }
+      }
+      return cryptoShuffle(deck);
+    }
+
+    loadSavedFactionDecks();
+
+    // =========================================================================
+    // 4. GLOBAL GAME STATE, PACING & PEER-TO-PEER WEBRTC STATE
+    // =========================================================================
+    let state = null;
+    let gameMode = 'ai'; // 'ai' or 'online'
+    let localRole = 'p1'; // 'p1' or 'p2'
+
+    let selectedHandIndex = null;
+    let selectedAttackerSlot = null;
+    let discardMode = false;
+    let selectedDiscardIndices = new Set();
+    let signalJamFirstSlot = null;
+
+    let isOpponentAnimating = false;
+    let activeActorHighlight = null; // { side: 'p1'|'p2', slot: 0|1|2 }
+    let localInterceptResolver = null;
+
+    const SPEED_PRESETS = [
+      { label: 'Normal', ms: 900 },
+      { label: 'Slow', ms: 1650 },
+      { label: 'Instant', ms: 180 }
+    ];
+    let currentSpeedIdx = 0;
+
+    function getStepDelayMs() {
+      return SPEED_PRESETS[currentSpeedIdx].ms;
+    }
+
+    function sleepStep(ms = getStepDelayMs()) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function cycleStepSpeed() {
+      currentSpeedIdx = (currentSpeedIdx + 1) % SPEED_PRESETS.length;
+      document.getElementById('btnStepSpeed').textContent = `Speed: ${SPEED_PRESETS[currentSpeedIdx].label}`;
+      showToast(`Opponent action speed set to ${SPEED_PRESETS[currentSpeedIdx].label}.`);
+    }
+
+    // WebRTC Serverless P2P Variables
+    let rtcPeer = null;
+    let rtcChannel = null;
+
+    function cleanupWebRTC() {
+      if (rtcChannel) {
+        try { rtcChannel.close(); } catch (e) {}
+        rtcChannel = null;
+      }
+      if (rtcPeer) {
+        try { rtcPeer.close(); } catch (e) {}
+        rtcPeer = null;
+      }
+    }
+
+    function encodeSignalPayload(obj) {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+    }
+
+    function decodeSignalPayload(str) {
+      return JSON.parse(decodeURIComponent(escape(atob(str.trim()))));
+    }
+
+    function waitForIceGathering(pc) {
+      return new Promise(resolve => {
+        if (pc.iceGatheringState === 'complete') {
+          resolve();
+          return;
+        }
+        const timer = setTimeout(resolve, 2500);
+        pc.onicegatheringstatechange = () => {
+          if (pc.iceGatheringState === 'complete') {
+            clearTimeout(timer);
+            resolve();
+          }
+        };
+      });
+    }
+
+    function setupDataChannelHandlers(channel) {
+      rtcChannel = channel;
+      channel.onopen = () => {
+        document.getElementById('lobbyOverlay').classList.add('hidden');
+        document.getElementById('guestJoinOverlay').classList.add('hidden');
+        showToast('Connected! Direct 2-Device Match Started.');
+        const myDeck = getActivePlayerDeckCounts();
+        if (localRole === 'p2') {
+          channel.send(JSON.stringify({
+            type: 'GUEST_DECK',
+            p2DeckCounts: myDeck,
+            p2Faction: selectedFaction
+          }));
+        }
+      };
+
+      channel.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'GUEST_DECK' && localRole === 'p1') {
+            const p1Title = `${getFactionDisplayName(selectedFaction)} (Host)`;
+            const p2Title = `${getFactionDisplayName(msg.p2Faction || 'accord')} (Guest)`;
+            state = createInitialGameState('online', p1Title, p2Title, getActivePlayerDeckCounts(), msg.p2DeckCounts);
+            channel.send(JSON.stringify({ type: 'STATE_SYNC', state }));
+            enterGameView();
+          } else if (msg.type === 'STATE_SYNC') {
+            state = msg.state;
+            if (!document.getElementById('gameView').classList.contains('hidden')) {
+              renderGameUI();
+            } else {
+              enterGameView();
+            }
+          }
+        } catch (err) {
+          console.error('P2P Message Error:', err);
+        }
+      };
+
+      channel.onclose = () => {
+        showToast('Opponent disconnected from P2P match.');
+      };
+    }
+
+    async function startHostP2PLobby() {
+      const activeDeck = getActivePlayerDeckCounts();
+      const totalCards = getDeckTotalCount(activeDeck);
+      const factionLabel = getFactionDisplayName(selectedFaction);
+      if (totalCards !== 30) {
+        showToast(`${factionLabel} deck has ${totalCards}/30 cards. Complete it in Edit Arsenal first!`);
+        openDeckModal(selectedFaction);
+        return;
+      }
+
+      cleanupWebRTC();
+      gameMode = 'online';
+      localRole = 'p1';
+      document.getElementById('hostOfferOutput').value = 'Generating secure invite code...';
+      document.getElementById('hostAnswerInput').value = '';
+      document.getElementById('lobbyOverlay').classList.remove('hidden');
+
+      try {
+        rtcPeer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        const channel = rtcPeer.createDataChannel('nullfront');
+        setupDataChannelHandlers(channel);
+
+        const offer = await rtcPeer.createOffer();
+        await rtcPeer.setLocalDescription(offer);
+        await waitForIceGathering(rtcPeer);
+
+        document.getElementById('hostOfferOutput').value = encodeSignalPayload(rtcPeer.localDescription);
+      } catch (err) {
+        showToast('WebRTC unavailable in this browser context.');
+        document.getElementById('lobbyOverlay').classList.add('hidden');
+      }
+    }
+
+    async function completeHostP2PConnection() {
+      const raw = document.getElementById('hostAnswerInput').value.trim();
+      if (!raw || !rtcPeer) {
+        showToast('Paste your friend\'s Reply Code first.');
+        return;
+      }
+      try {
+        const answerDesc = decodeSignalPayload(raw);
+        await rtcPeer.setRemoteDescription(new RTCSessionDescription(answerDesc));
+      } catch (err) {
+        showToast('Invalid Reply Code. Please ask your friend to copy it again.');
+      }
+    }
+
+    function openGuestJoinModal() {
+      const activeDeck = getActivePlayerDeckCounts();
+      const totalCards = getDeckTotalCount(activeDeck);
+      const factionLabel = getFactionDisplayName(selectedFaction);
+      if (totalCards !== 30) {
+        showToast(`${factionLabel} deck has ${totalCards}/30 cards. Complete it in Edit Arsenal first!`);
+        openDeckModal(selectedFaction);
+        return;
+      }
+
+      cleanupWebRTC();
+      gameMode = 'online';
+      localRole = 'p2';
+      document.getElementById('guestOfferInput').value = '';
+      document.getElementById('guestAnswerOutput').value = '';
+      document.getElementById('guestAnswerSection').classList.add('hidden');
+      document.getElementById('guestJoinOverlay').classList.remove('hidden');
+    }
+
+    async function generateGuestP2PAnswer() {
+      const raw = document.getElementById('guestOfferInput').value.trim();
+      if (!raw) {
+        showToast('Paste the Host Invite Code first.');
+        return;
+      }
+      try {
+        const offerDesc = decodeSignalPayload(raw);
+        rtcPeer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        rtcPeer.ondatachannel = (ev) => setupDataChannelHandlers(ev.channel);
+
+        await rtcPeer.setRemoteDescription(new RTCSessionDescription(offerDesc));
+        const answer = await rtcPeer.createAnswer();
+        await rtcPeer.setLocalDescription(answer);
+        await waitForIceGathering(rtcPeer);
+
+        document.getElementById('guestAnswerOutput').value = encodeSignalPayload(rtcPeer.localDescription);
+        document.getElementById('guestAnswerSection').classList.remove('hidden');
+        showToast('Reply Code generated! Copy and send it to the Host.');
+      } catch (err) {
+        showToast('Invalid Host Invite Code.');
+      }
+    }
+
+    function closeLobbyOverlay() {
+      cleanupWebRTC();
+      document.getElementById('lobbyOverlay').classList.add('hidden');
+    }
+
+    function closeGuestJoinOverlay() {
+      cleanupWebRTC();
+      document.getElementById('guestJoinOverlay').classList.add('hidden');
+    }
+
+    function copyTextField(elementId, successMsg) {
+      const el = document.getElementById(elementId);
+      el.select();
+      document.execCommand('copy');
+      showToast(successMsg);
+    }
+
+    function syncAndRender() {
+      if (gameMode === 'online' && rtcChannel && rtcChannel.readyState === 'open') {
+        try {
+          rtcChannel.send(JSON.stringify({ type: 'STATE_SYNC', state }));
+        } catch (e) {}
+      }
+      renderGameUI();
+    }
+
+    // =========================================================================
+    // 5. CORE GAME INITIALIZATION & OPENING DRAW / MULLIGAN RULES
+    // =========================================================================
+    function drawValidOpeningHand(deckArray) {
+      let deck = [...deckArray];
+      let hand = [];
+      let reshuffledCount = 0;
+
+      while (true) {
+        hand = deck.splice(0, 5);
+        const hasUnit = hand.some(item => CARD_CATALOG[item.cardId].type === 'unit');
+        if (hasUnit || reshuffledCount >= 10) {
+          break;
+        }
+        reshuffledCount++;
+        deck = cryptoShuffle([...deck, ...hand]);
+      }
+      return { deck, hand, reshuffledCount };
+    }
+
+    function createInitialGameState(mode, p1Name, p2Name, p1DeckCounts, p2DeckCounts) {
+      const p1Opening = drawValidOpeningHand(buildDeckArrayFromCounts(p1DeckCounts));
+      const p2Opening = drawValidOpeningHand(buildDeckArrayFromCounts(p2DeckCounts));
+
+      const log = [
+        { type: 'system', text: `Match initialized: ${p1Name} vs ${p2Name}. First to 5 points wins!` }
+      ];
+      if (p1Opening.reshuffledCount > 0) {
+        log.push({ type: 'info', text: `${p1Name} had no units in opening hand — revealed, reshuffled & redrew (${p1Opening.reshuffledCount}x).` });
+      }
+      if (p2Opening.reshuffledCount > 0) {
+        log.push({ type: 'info', text: `${p2Name} had no units in opening hand — revealed, reshuffled & redrew (${p2Opening.reshuffledCount}x).` });
+      }
+
+      return {
+        mode,
+        turnNumber: 1,
+        activePlayer: 'p1',
+        actionsRemaining: 3,
+        usedActions: { unit: false, tactical: false, equipment: false, attack: false, discard: false },
+        bonusActions: { unit: 0, attack: 0 },
+        hasTakenAnyActionThisTurn: false,
+        pendingTactical: null,
+        lastDiceRoll: null,
+        winner: null,
+        winReason: '',
+        log,
+        p1: {
+          name: p1Name,
+          score: 0,
+          deck: p1Opening.deck,
+          hand: p1Opening.hand,
+          discard: [],
+          board: [null, null, null], // [Left, Center, Right]
+          mulliganAvailable: true,
+          gasTurnsRemaining: 0 // Gas applied ON p1 by opponent
+        },
+        p2: {
+          name: p2Name,
+          score: 0,
+          deck: p2Opening.deck,
+          hand: p2Opening.hand,
+          discard: [],
+          board: [null, null, null],
+          mulliganAvailable: true,
+          gasTurnsRemaining: 0
+        }
+      };
+    }
+
+    function addLog(type, text) {
+      if (!state) return;
+      state.log.push({ type, text });
+      if (state.log.length > 80) state.log.shift();
+    }
+
+    function getPerspective() {
+      const meKey = localRole;
+      const oppKey = localRole === 'p1' ? 'p2' : 'p1';
+      return {
+        meKey,
+        oppKey,
+        me: state[meKey],
+        opp: state[oppKey],
+        isMyTurn: state.activePlayer === meKey && !state.winner && !isOpponentAnimating
+      };
+    }
+
+    function performMulligan(sideKey) {
+      const player = state[sideKey];
+      if (!player.mulliganAvailable || state.hasTakenAnyActionThisTurn || state.turnNumber > 2) {
+        showToast('Mulligan is only available once before your first action.');
+        return;
+      }
+      player.mulliganAvailable = false;
+      const combined = cryptoShuffle([...player.deck, ...player.hand]);
+      const redrawn = drawValidOpeningHand(combined);
+      player.deck = redrawn.deck;
+      player.hand = redrawn.hand;
+      addLog('info', `${player.name} took a hidden optional Mulligan.`);
+      clearSelections();
+      syncAndRender();
+    }
+
+    // =========================================================================
+    // 6. STAT CALCULATION, ADJACENCY & COMBAT ENGINE
+    // =========================================================================
+    function getAdjacentIndices(slotIdx) {
+      if (slotIdx === 0) return [1];
+      if (slotIdx === 1) return [0, 2];
+      return [1];
+    }
+
+    function isUnitProtectedByWall(sideKey, slotIdx, ignoreEnemyEffects = false) {
+      if (ignoreEnemyEffects) return false;
+      const board = state[sideKey].board;
+      const adj = getAdjacentIndices(slotIdx);
+      return adj.some(i => board[i] && board[i].cardId === 'wall');
+    }
+
+    function getEffectiveUnitStats(sideKey, slotIdx, ignoreEnemyEffects = false, ignoreStatChanges = false) {
+      const board = state[sideKey].board;
+      const unitObj = board[slotIdx];
+      if (!unitObj) return null;
+
+      const def = CARD_CATALOG[unitObj.cardId];
+      let acc = def.acc || 0;
+      let dmg = def.dmg || 0;
+      let dmgBonus = def.dmgBonus || 0;
+      let eva = def.eva || 0;
+      let defDice = def.def || 0;
+      let flatDefBonus = 0;
+      let hasLuckyPendant = false;
+
+      if (!ignoreStatChanges) {
+        for (const eq of unitObj.equipments) {
+          const eqDef = CARD_CATALOG[eq.cardId];
+          acc += eqDef.modAcc || 0;
+          dmg += eqDef.modDmg || 0;
+          eva += eqDef.modEva || 0;
+          defDice += eqDef.modDef || 0;
+          if (eq.cardId === 'lucky_pendant') hasLuckyPendant = true;
+        }
+
+        if (!ignoreEnemyEffects) {
+          const adj = getAdjacentIndices(slotIdx);
+          for (const adjIdx of adj) {
+            if (board[adjIdx] && board[adjIdx].cardId === 'engineer') {
+              flatDefBonus += 2;
+            }
+          }
+        }
+      }
+
+      return { acc, dmg, dmgBonus, eva, def: defDice, flatDefBonus, hasLuckyPendant };
+    }
+
+    function hasAdjacentActiveMedic(sideKey, slotIdx, ignoreEnemyEffects = false) {
+      if (ignoreEnemyEffects) return null;
+      const board = state[sideKey].board;
+      const adj = getAdjacentIndices(slotIdx);
+      for (const adjIdx of adj) {
+        if (board[adjIdx] && board[adjIdx].cardId === 'medic' && !board[adjIdx].medicUsed) {
+          return adjIdx;
+        }
+      }
+      return null;
+    }
+
+    function destroyUnitAtSlot(sideKey, slotIdx, awardPointToSideKey = null) {
+      const victimPlayer = state[sideKey];
+      const unitObj = victimPlayer.board[slotIdx];
+      if (!unitObj) return;
+
+      const def = CARD_CATALOG[unitObj.cardId];
+      victimPlayer.discard.push({ uid: unitObj.uid, cardId: unitObj.cardId });
+      for (const eq of unitObj.equipments) {
+        victimPlayer.discard.push({ uid: eq.uid, cardId: eq.cardId });
+      }
+      victimPlayer.board[slotIdx] = null;
+
+      if (awardPointToSideKey) {
+        state[awardPointToSideKey].score += 1;
+        addLog('combat', `${def.name} was destroyed! ${state[awardPointToSideKey].name} scores +1 point (${state[awardPointToSideKey].score}/5).`);
+        checkVictoryConditions();
+      } else {
+        addLog('combat', `${def.name} and its attached equipment were discarded.`);
+      }
+    }
+
+    function checkVictoryConditions() {
+      if (!state || state.winner) return true;
+      if (state.p1.score >= 5) {
+        state.winner = 'p1';
+        state.winReason = `${state.p1.name} reached 5 points first!`;
+        return true;
+      }
+      if (state.p2.score >= 5) {
+        state.winner = 'p2';
+        state.winReason = `${state.p2.name} reached 5 points first!`;
+        return true;
+      }
+      return false;
+    }
+
+    function resolveDamageCheck(attackerLabel, dmgDice, dmgFlat, atkLucky, defenderSideKey, defenderSlotIdx, scorerSideKey, ignoreEnemyEffects = false, ignoreStatChanges = false) {
+      const defStats = getEffectiveUnitStats(defenderSideKey, defenderSlotIdx, ignoreEnemyEffects, ignoreStatChanges);
+      let atkRoll = rollDiceFormula(dmgDice, dmgFlat, atkLucky);
+      let defRoll = rollDiceFormula(defStats.def, defStats.flatDefBonus, defStats.hasLuckyPendant);
+      let killed = atkRoll.total > defRoll.total;
+      let medicSaved = false;
+
+      if (killed) {
+        const medicSlot = hasAdjacentActiveMedic(defenderSideKey, defenderSlotIdx, ignoreEnemyEffects);
+        if (medicSlot !== null) {
+          state[defenderSideKey].board[medicSlot].medicUsed = true;
+          medicSaved = true;
+          addLog('combat', `Medic intervenes! Rerolling attack and defense rolls...`);
+          atkRoll = rollDiceFormula(dmgDice, dmgFlat, atkLucky);
+          defRoll = rollDiceFormula(defStats.def, defStats.flatDefBonus, defStats.hasLuckyPendant);
+          killed = atkRoll.total > defRoll.total;
+        }
+      }
+
+      if (killed) {
+        destroyUnitAtSlot(defenderSideKey, defenderSlotIdx, scorerSideKey);
+      }
+
+      return { atkRoll, defRoll, killed, medicSaved };
+    }
+
+    function executeAttack(atkSideKey, atkSlotIdx, defSideKey, defSlotIdx, isFreeAttack = false) {
+      const attackerUnit = state[atkSideKey].board[atkSlotIdx];
+      const defenderUnit = state[defSideKey].board[defSlotIdx];
+      if (!attackerUnit || !defenderUnit) return false;
+
+      const atkDef = CARD_CATALOG[attackerUnit.cardId];
+      const defDef = CARD_CATALOG[defenderUnit.cardId];
+
+      if (!atkDef.canAttack) {
+        showToast(`${atkDef.name} cannot attack.`);
+        return false;
+      }
+
+      if (!isFreeAttack && !canTakeAction('attack')) {
+        showToast('You have already attacked this turn!');
+        return false;
+      }
+
+      const ignoreEnemyEffects = attackerUnit.cardId === 'assassin';
+      const ignoreStatChanges = attackerUnit.cardId === 'sniper';
+      const ignoreWall = attackerUnit.cardId === 'airplane' || ignoreEnemyEffects;
+
+      if (!ignoreWall && isUnitProtectedByWall(defSideKey, defSlotIdx, false)) {
+        showToast(`${defDef.name} is protected by an adjacent Wall!`);
+        return false;
+      }
+
+      if (!isFreeAttack) {
+        consumeAction('attack');
+      }
+
+      const atkStats = getEffectiveUnitStats(atkSideKey, atkSlotIdx, false, false);
+      const defStats = getEffectiveUnitStats(defSideKey, defSlotIdx, ignoreEnemyEffects, ignoreStatChanges);
+
+      const accRoll = rollDiceFormula(atkStats.acc, 0, atkStats.hasLuckyPendant);
+      const evaRoll = rollDiceFormula(defStats.eva, 0, defStats.hasLuckyPendant);
+      const isHit = accRoll.total > evaRoll.total;
+
+      let dmgStep = null;
+      if (isHit) {
+        dmgStep = resolveDamageCheck(
+          atkDef.name,
+          atkStats.dmg,
+          atkStats.dmgBonus,
+          atkStats.hasLuckyPendant,
+          defSideKey,
+          defSlotIdx,
+          atkSideKey,
+          ignoreEnemyEffects,
+          ignoreStatChanges
+        );
+      }
+
+      state.lastDiceRoll = {
+        title: `${atkDef.name} attacks ${defDef.name}`,
+        hitStep: {
+          atkLabel: `${atkDef.name} Acc (${atkStats.acc}D6)`,
+          defLabel: `${defDef.name} Eva (${defStats.eva}D6)`,
+          atkRoll: accRoll,
+          defRoll: evaRoll,
+          isHit
+        },
+        dmgStep: dmgStep ? {
+          atkLabel: `${atkDef.name} Dmg (${atkStats.dmg}D6${atkStats.dmgBonus ? '+' + atkStats.dmgBonus : ''})`,
+          defLabel: `${defDef.name} Def (${defStats.def}D6${defStats.flatDefBonus ? '+' + defStats.flatDefBonus : ''})`,
+          atkRoll: dmgStep.atkRoll,
+          defRoll: dmgStep.defRoll,
+          killed: dmgStep.killed,
+          medicSaved: dmgStep.medicSaved
+        } : null
+      };
+
+      addLog('combat', `${atkDef.name} attacks ${defDef.name}: Acc ${accRoll.total} vs Eva ${evaRoll.total} → ${isHit ? 'HIT!' : 'MISS!'}`);
+
+      // Ashen Mortar Splash Damage on Hit
+      if (isHit && attackerUnit.cardId === 'mortar') {
+        const adjTargets = getAdjacentIndices(defSlotIdx);
+        for (const adjSlot of adjTargets) {
+          const adjUnit = state[defSideKey].board[adjSlot];
+          if (adjUnit) {
+            const adjDef = CARD_CATALOG[adjUnit.cardId];
+            const splashRes = resolveDamageCheck(
+              'Ashen Mortar Splash',
+              1,
+              0,
+              false,
+              defSideKey,
+              adjSlot,
+              atkSideKey,
+              false,
+              false
+            );
+            addLog('combat', `Ashen Mortar splash hits adjacent ${adjDef.name}: 1D6 (${splashRes.atkRoll.total}) vs Def (${splashRes.defRoll.total}) → ${splashRes.killed ? 'DESTROYED!' : 'Survived'}`);
+          }
+        }
+      }
+
+      clearSelections();
+      syncAndRender();
+      return true;
+    }
+
+    // =========================================================================
+    // 7. ACTION ECONOMY & CARD PLAY HANDLERS
+    // =========================================================================
+    function canTakeAction(actionType) {
+      if (state.winner) return false;
+      if (actionType === 'unit' && state.bonusActions.unit > 0) return true;
+      if (actionType === 'attack' && state.bonusActions.attack > 0) return true;
+      if (state.actionsRemaining <= 0) return false;
+      return !state.usedActions[actionType];
+    }
+
+    function consumeAction(actionType, cost = 1) {
+      state.hasTakenAnyActionThisTurn = true;
+      state[state.activePlayer].mulliganAvailable = false;
+
+      if (actionType === 'unit' && state.bonusActions.unit > 0) {
+        state.bonusActions.unit -= 1;
+        return;
+      }
+      if (actionType === 'attack' && state.bonusActions.attack > 0) {
+        state.bonusActions.attack -= 1;
+        return;
+      }
+      state.actionsRemaining = Math.max(0, state.actionsRemaining - cost);
+      state.usedActions[actionType] = true;
+    }
+
+    function drawCards(sideKey, count) {
+      const player = state[sideKey];
+      let drawn = 0;
+      for (let i = 0; i < count; i++) {
+        if (player.deck.length === 0) break;
+        player.hand.push(player.deck.shift());
+        drawn++;
+      }
+      return drawn;
+    }
+
+    function playUnitCard(sideKey, handIdx, slotIdx) {
+      const player = state[sideKey];
+      const cardItem = player.hand[handIdx];
+      if (!cardItem) return false;
+      const def = CARD_CATALOG[cardItem.cardId];
+      if (def.type !== 'unit') return false;
+
+      if (!canTakeAction('unit')) {
+        showToast('You already played a Unit this turn!');
+        return false;
+      }
+      if (player.board[slotIdx] !== null) {
+        showToast('That frontline position is already occupied!');
+        return false;
+      }
+
+      consumeAction('unit');
+      player.hand.splice(handIdx, 1);
+      player.board[slotIdx] = {
+        uid: cardItem.uid,
+        cardId: cardItem.cardId,
+        equipments: [],
+        medicUsed: false
+      };
+
+      const slotNames = ['Left', 'Center', 'Right'];
+      addLog('play', `${player.name} deployed ${def.name} to ${slotNames[slotIdx]} position.`);
+
+      // Paratrooper immediate free attack trigger
+      if (cardItem.cardId === 'paratrooper') {
+        const oppKey = sideKey === 'p1' ? 'p2' : 'p1';
+        const validTargets = [0, 1, 2].filter(i => state[oppKey].board[i] !== null && !isUnitProtectedByWall(oppKey, i, false));
+        if (validTargets.length > 0 && sideKey === localRole) {
+          addLog('info', `Paratrooper drop strike ready! Select an enemy target for its free attack.`);
+          clearSelections();
+          syncAndRender();
+          // Automatically select Paratrooper for free attack if possible
+          const target = validTargets[0];
+          if (validTargets.length === 1) {
+            executeAttack(sideKey, slotIdx, oppKey, target, true);
+          } else {
+            state.bonusActions.attack += 1;
+            selectedAttackerSlot = slotIdx;
+            showToast('Paratrooper deployed! Click an enemy unit to use its free attack.');
+            renderGameUI();
+          }
+          return true;
+        }
+      }
+
+      clearSelections();
+      syncAndRender();
+      return true;
+    }
+
+    function playEquipmentCard(sideKey, handIdx, targetSideKey, targetSlotIdx) {
+      const player = state[sideKey];
+      const cardItem = player.hand[handIdx];
+      if (!cardItem) return false;
+      const def = CARD_CATALOG[cardItem.cardId];
+      if (def.type !== 'equipment') return false;
+
+      if (!canTakeAction('equipment')) {
+        showToast('You already equipped an Equipment this turn!');
+        return false;
+      }
+
+      const targetUnit = state[targetSideKey].board[targetSlotIdx];
+      if (!targetUnit) {
+        showToast('Select a unit to attach this equipment to.');
+        return false;
+      }
+      const targetDef = CARD_CATALOG[targetUnit.cardId];
+      if (targetDef.cannotEquip) {
+        showToast(`${targetDef.name} cannot be equipped!`);
+        return false;
+      }
+
+      consumeAction('equipment');
+      player.hand.splice(handIdx, 1);
+      targetUnit.equipments.push({ uid: cardItem.uid, cardId: cardItem.cardId });
+
+      addLog('play', `${player.name} equipped ${def.name} onto ${targetDef.name}.`);
+      clearSelections();
+      syncAndRender();
+      return true;
+    }
+
+    function resolveTacticalEffect(casterSideKey, cardItem, options = {}) {
+      const caster = state[casterSideKey];
+      const oppKey = casterSideKey === 'p1' ? 'p2' : 'p1';
+      const opp = state[oppKey];
+      const def = CARD_CATALOG[cardItem.cardId];
+
+      switch (cardItem.cardId) {
+        case 'retreat': {
+          const tSide = options.targetSide;
+          const tSlot = options.targetSlot;
+          const unitObj = state[tSide].board[tSlot];
+          if (unitObj) {
+            const uDef = CARD_CATALOG[unitObj.cardId];
+            const owner = state[tSide];
+            owner.hand.push({ uid: unitObj.uid, cardId: unitObj.cardId });
+            for (const eq of unitObj.equipments) {
+              owner.hand.push({ uid: eq.uid, cardId: eq.cardId });
+            }
+            state[tSide].board[tSlot] = null;
+            addLog('tactical', `Retreat returned ${uDef.name} and its equipment to ${owner.name}'s hand.`);
+          }
+          break;
+        }
+        case 'reinforcements': {
+          const drawn = drawCards(casterSideKey, 4);
+          state.bonusActions.unit += 1;
+          addLog('tactical', `Reinforcements! ${caster.name} drew ${drawn} card(s) and gained +1 extra Unit play this turn.`);
+          break;
+        }
+        case 'gas': {
+          opp.gasTurnsRemaining = 4;
+          addLog('tactical', `☣ Gas cloud deployed! ${opp.name}'s units will take 1D6 damage at the end of the next 4 turns.`);
+          break;
+        }
+        case 'emp': {
+          const tSlot = options.targetSlot;
+          const targetUnit = opp.board[tSlot];
+          if (targetUnit && targetUnit.equipments.length > 0) {
+            const removedEq = targetUnit.equipments.pop();
+            opp.discard.push(removedEq);
+            addLog('tactical', `EMP shorted out and discarded ${CARD_CATALOG[removedEq.cardId].name} from ${CARD_CATALOG[targetUnit.cardId].name}!`);
+          }
+          break;
+        }
+        case 'drugged_army': {
+          state.bonusActions.attack += 1;
+          addLog('tactical', `Drugged Army! ${caster.name} may attack an additional time this turn.`);
+          break;
+        }
+        case 'bio_warfare': {
+          let returnedCount = 0;
+          for (let i = 0; i < 3; i++) {
+            const u = opp.board[i];
+            if (u) {
+              opp.hand.push({ uid: u.uid, cardId: u.cardId });
+              for (const eq of u.equipments) {
+                opp.hand.push({ uid: eq.uid, cardId: eq.cardId });
+              }
+              opp.board[i] = null;
+              returnedCount++;
+            }
+          }
+          addLog('tactical', `☣ Bio Warfare! Returned ${returnedCount} enemy unit(s) and their equipment to ${opp.name}'s hand.`);
+          break;
+        }
+        case 'signal_jam': {
+          if (casterSideKey === localRole) {
+            signalJamFirstSlot = null;
+            openSignalJamModal();
+          } else {
+            // AI swaps two occupied enemy slots if possible
+            const occupied = [0, 1, 2].filter(i => opp.board[i] !== null);
+            if (occupied.length >= 2) {
+              const a = occupied[0];
+              const b = occupied[1];
+              [opp.board[a], opp.board[b]] = [opp.board[b], opp.board[a]];
+              addLog('tactical', `Signal Jam scrambled ${opp.name}'s frontline positions!`);
+            }
+          }
+          break;
+        }
+        case 'missile_strike': {
+          const tSlot = options.targetSlot;
+          const targetUnit = opp.board[tSlot];
+          if (targetUnit) {
+            const tDef = CARD_CATALOG[targetUnit.cardId];
+            const res = resolveDamageCheck('Missile Strike', 5, 0, false, oppKey, tSlot, casterSideKey, false, false);
+            state.lastDiceRoll = {
+              title: `Missile Strike targets ${tDef.name}`,
+              hitStep: null,
+              dmgStep: {
+                atkLabel: 'Missile Strike (5D6)',
+                defLabel: `${tDef.name} Def`,
+                atkRoll: res.atkRoll,
+                defRoll: res.defRoll,
+                killed: res.killed,
+                medicSaved: res.medicSaved
+              }
+            };
+            addLog('tactical', `🚀 Missile Strike hits ${tDef.name}: 5D6 (${res.atkRoll.total}) vs Def (${res.defRoll.total}) → ${res.killed ? 'DESTROYED!' : 'Survived'}`);
+          }
+          break;
+        }
+        case 'nuke': {
+          for (const sKey of ['p1', 'p2']) {
+            for (let i = 0; i < 3; i++) {
+              if (state[sKey].board[i]) {
+                destroyUnitAtSlot(sKey, i, null); // Does not score!
+              }
+            }
+          }
+          addLog('tactical', `☢ NUKE DETONATED! All cards on the battlefield were discarded without scoring.`);
+          break;
+        }
+      }
+    }
+
+    function playTacticalCard(casterSideKey, handIdx, options = {}) {
+      const caster = state[casterSideKey];
+      const oppKey = casterSideKey === 'p1' ? 'p2' : 'p1';
+      const opp = state[oppKey];
+      const cardItem = caster.hand[handIdx];
+      if (!cardItem) return false;
+      const def = CARD_CATALOG[cardItem.cardId];
+
+      if (cardItem.cardId === 'intercept') {
+        showToast('Intercept stays in your hand and triggers automatically when your opponent plays a Tactical card.');
+        return false;
+      }
+      if (state.usedActions.tactical) {
+        showToast('You already played a Tactical card this turn!');
+        return false;
+      }
+      const cost = def.actionCost || 1;
+      if (state.actionsRemaining < cost) {
+        showToast(`${def.name} requires ${cost} actions.`);
+        return false;
+      }
+
+      consumeAction('tactical', cost);
+      caster.hand.splice(handIdx, 1);
+      caster.discard.push(cardItem);
+
+      // AI Intercept Check when Human plays Tactical in Solo Mode
+      if (gameMode === 'ai' && casterSideKey === 'p1') {
+        const aiInterceptIdx = opp.hand.findIndex(c => c.cardId === 'intercept');
+        if (aiInterceptIdx !== -1 && ['bio_warfare', 'nuke', 'missile_strike', 'gas', 'retreat', 'emp'].includes(cardItem.cardId)) {
+          const interceptCard = opp.hand.splice(aiInterceptIdx, 1)[0];
+          opp.discard.push(interceptCard);
+          addLog('tactical', `⚡ ${opp.name} discarded INTERCEPT from hand and countered ${def.name}!`);
+          clearSelections();
+          syncAndRender();
+          return true;
+        }
+      }
+
+      // Online Multiplayer Intercept Check if Opponent holds Intercept
+      if (gameMode === 'online' && opp.hand.some(c => c.cardId === 'intercept')) {
+        state.pendingTactical = {
+          casterSideKey,
+          cardItem,
+          options
+        };
+        addLog('tactical', `${caster.name} played ${def.name} — awaiting ${opp.name}'s response...`);
+        clearSelections();
+        syncAndRender();
+        return true;
+      }
+
+      resolveTacticalEffect(casterSideKey, cardItem, options);
+      clearSelections();
+      syncAndRender();
+      return true;
+    }
+
+    function resolveOnlinePendingTactical(useIntercept) {
+      if (!state || !state.pendingTactical) return;
+      const { casterSideKey, cardItem, options } = state.pendingTactical;
+      const oppKey = casterSideKey === 'p1' ? 'p2' : 'p1';
+      const opp = state[oppKey];
+      const def = CARD_CATALOG[cardItem.cardId];
+      state.pendingTactical = null;
+      document.getElementById('interceptModal').classList.add('hidden');
+
+      if (useIntercept) {
+        const idx = opp.hand.findIndex(c => c.cardId === 'intercept');
+        if (idx !== -1) {
+          const ic = opp.hand.splice(idx, 1)[0];
+          opp.discard.push(ic);
+        }
+        addLog('tactical', `⚡ ${opp.name} discarded INTERCEPT and countered ${def.name}!`);
+      } else {
+        resolveTacticalEffect(casterSideKey, cardItem, options);
+      }
+      syncAndRender();
+    }
+
+    function executeDiscardAction(sideKey, indicesArray) {
+      if (!canTakeAction('discard')) {
+        showToast('You have already used your Discard action this turn.');
+        return;
+      }
+      if (!indicesArray || indicesArray.length === 0 || indicesArray.length > 3) {
+        showToast('Select 1 to 3 cards to discard.');
+        return;
+      }
+      consumeAction('discard');
+      const player = state[sideKey];
+      const sorted = [...indicesArray].sort((a, b) => b - a);
+      for (const idx of sorted) {
+        const removed = player.hand.splice(idx, 1)[0];
+        if (removed) player.discard.push(removed);
+      }
+      addLog('info', `${player.name} discarded ${sorted.length} card(s).`);
+      discardMode = false;
+      selectedDiscardIndices.clear();
+      clearSelections();
+      syncAndRender();
+    }
+
+    // =========================================================================
+    // 8. END OF TURN RESOLUTION (GAS, 0-UNIT DEFEAT CHECK, DRAW TO 5)
+    // =========================================================================
+    function endCurrentTurn() {
+      if (!state || state.winner) return;
+      const endingKey = state.activePlayer;
+      const endingPlayer = state[endingKey];
+      const nextKey = endingKey === 'p1' ? 'p2' : 'p1';
+
+      // 1. Resolve Gas ticking on ending player's units
+      if (endingPlayer.gasTurnsRemaining > 0) {
+        endingPlayer.gasTurnsRemaining -= 1;
+        addLog('tactical', `☣ Gas cloud deals 1D6 damage to ${endingPlayer.name}'s units (${endingPlayer.gasTurnsRemaining} turns left).`);
+        for (let i = 0; i < 3; i++) {
+          if (endingPlayer.board[i]) {
+            const uDef = CARD_CATALOG[endingPlayer.board[i].cardId];
+            const res = resolveDamageCheck('Gas Cloud', 1, 0, false, endingKey, i, nextKey, false, false);
+            addLog('combat', `☣ Gas vs ${uDef.name}: 1D6 (${res.atkRoll.total}) vs Def (${res.defRoll.total}) → ${res.killed ? 'DESTROYED!' : 'Survived'}`);
+          }
+        }
+        if (checkVictoryConditions()) {
+          syncAndRender();
+          return;
+        }
+      }
+
+      // 2. Defeat Rule: Ending turn with 0 units in play loses immediately
+      const unitsAlive = endingPlayer.board.filter(u => u !== null).length;
+      if (unitsAlive === 0) {
+        state.winner = nextKey;
+        state.winReason = `${endingPlayer.name} ended their turn with 0 units in play!`;
+        addLog('system', state.winReason);
+        syncAndRender();
+        return;
+      }
+
+      // 3. Draw until player has 5 cards
+      const needed = Math.max(0, 5 - endingPlayer.hand.length);
+      if (needed > 0) {
+        const drawn = drawCards(endingKey, needed);
+        addLog('info', `${endingPlayer.name} drew ${drawn} card(s) to refill hand.`);
+      }
+
+      // 4. Advance Turn
+      state.activePlayer = nextKey;
+      state.turnNumber += 1;
+      state.actionsRemaining = 3;
+      state.usedActions = { unit: false, tactical: false, equipment: false, attack: false, discard: false };
+      state.bonusActions = { unit: 0, attack: 0 };
+      state.hasTakenAnyActionThisTurn = false;
+
+      discardMode = false;
+      selectedDiscardIndices.clear();
+      clearSelections();
+      addLog('system', `--- Turn ${state.turnNumber}: ${state[nextKey].name}'s Turn ---`);
+      syncAndRender();
+
+      if (gameMode === 'ai' && state.activePlayer === 'p2' && !state.winner) {
+        runAITurn();
+      }
+    }
+
+    // =========================================================================
+    // 9. STEP-BY-STEP PACED AI COMMANDER & FLOATING INTERCEPT PROMPT
+    // =========================================================================
+    function showLocalTacticalReactionWindow(cardItem, targetDesc, hasIntercept) {
+      return new Promise(resolve => {
+        const def = CARD_CATALOG[cardItem.cardId];
+        document.getElementById('interceptCardName').textContent = def.name;
+        document.getElementById('interceptCardCost').textContent = `${def.actionCost || 1} Action`;
+        document.getElementById('interceptCardEffect').textContent = def.effectText;
+        document.getElementById('interceptCardTargetInfo').textContent = targetDesc || '';
+
+        if (hasIntercept) {
+          document.getElementById('interceptPromptText').innerHTML = `You have <strong>Intercept</strong> in hand! Discard it to counter <strong>${def.name}</strong>?`;
+          document.getElementById('interceptChoiceButtons').classList.remove('hidden');
+          document.getElementById('interceptAcknowledgeContainer').classList.add('hidden');
+        } else {
+          document.getElementById('interceptPromptText').textContent = `Opponent played ${def.name}. Review its effect and continue.`;
+          document.getElementById('interceptChoiceButtons').classList.add('hidden');
+          document.getElementById('interceptAcknowledgeContainer').classList.remove('hidden');
+        }
+
+        document.getElementById('interceptModal').classList.remove('hidden');
+        localInterceptResolver = (choice) => {
+          localInterceptResolver = null;
+          document.getElementById('interceptModal').classList.add('hidden');
+          resolve(choice);
+        };
+      });
+    }
+
+    function respondToTacticalWindow(useIntercept) {
+      if (localInterceptResolver) {
+        localInterceptResolver(useIntercept);
+      } else if (state && state.pendingTactical) {
+        resolveOnlinePendingTactical(useIntercept);
+      }
+    }
+
+    async function runAITurn() {
+      if (!state || state.activePlayer !== 'p2' || state.winner) return;
+      isOpponentAnimating = true;
+      activeActorHighlight = null;
+      renderGameUI();
+
+      await sleepStep();
+
+      // Step 1: Play a Unit if AI has one in hand and an open slot
+      if (canTakeAction('unit')) {
+        const emptySlots = [0, 1, 2].filter(i => state.p2.board[i] === null);
+        const unitIdx = state.p2.hand.findIndex(c => CARD_CATALOG[c.cardId].type === 'unit');
+        if (emptySlots.length > 0 && unitIdx !== -1) {
+          const cardId = state.p2.hand[unitIdx].cardId;
+          // Prefer Center slot for support units like Wall, Engineer, Medic
+          let chosenSlot = emptySlots[0];
+          if (['wall', 'engineer', 'medic'].includes(cardId) && emptySlots.includes(1)) {
+            chosenSlot = 1;
+          }
+          activeActorHighlight = { side: 'p2', slot: chosenSlot };
+          playUnitCard('p2', unitIdx, chosenSlot);
+          await sleepStep();
+          activeActorHighlight = null;
+        }
+      }
+
+      if (state.winner) { isOpponentAnimating = false; renderGameUI(); return; }
+
+      // Step 2: Equip an Equipment if AI has one and an equippable unit
+      if (canTakeAction('equipment')) {
+        const eqIdx = state.p2.hand.findIndex(c => CARD_CATALOG[c.cardId].type === 'equipment');
+        const validUnits = [0, 1, 2].filter(i => state.p2.board[i] !== null && !CARD_CATALOG[state.p2.board[i].cardId].cannotEquip);
+        if (eqIdx !== -1 && validUnits.length > 0) {
+          const targetSlot = validUnits[0];
+          activeActorHighlight = { side: 'p2', slot: targetSlot };
+          playEquipmentCard('p2', eqIdx, 'p2', targetSlot);
+          await sleepStep();
+          activeActorHighlight = null;
+        }
+      }
+
+      if (state.winner) { isOpponentAnimating = false; renderGameUI(); return; }
+
+      // Step 3: Play a Tactical Card if valid & affordable
+      if (!state.usedActions.tactical && state.actionsRemaining > 0) {
+        for (let i = 0; i < state.p2.hand.length; i++) {
+          const cardItem = state.p2.hand[i];
+          const def = CARD_CATALOG[cardItem.cardId];
+          if (def.type !== 'tactical' || cardItem.cardId === 'intercept') continue;
+          if (state.actionsRemaining < (def.actionCost || 1)) continue;
+
+          let valid = false;
+          let options = {};
+          let targetDesc = '';
+
+          if (def.targetType === 'none') {
+            if (cardItem.cardId === 'bio_warfare' && state.p1.board.filter(Boolean).length < 2) continue;
+            if (cardItem.cardId === 'nuke' && state.p1.board.filter(Boolean).length <= state.p2.board.filter(Boolean).length) continue;
+            valid = true;
+          } else if (def.targetType === 'enemy_unit') {
+            const targets = [0, 1, 2].filter(s => state.p1.board[s] !== null);
+            if (targets.length > 0) {
+              options = { targetSide: 'p1', targetSlot: targets[0] };
+              targetDesc = `Target: Your ${CARD_CATALOG[state.p1.board[targets[0]].cardId].name}`;
+              valid = true;
+            }
+          } else if (def.targetType === 'enemy_equipped_unit') {
+            const targets = [0, 1, 2].filter(s => state.p1.board[s] && state.p1.board[s].equipments.length > 0);
+            if (targets.length > 0) {
+              options = { targetSide: 'p1', targetSlot: targets[0] };
+              targetDesc = `Target: Your ${CARD_CATALOG[state.p1.board[targets[0]].cardId].name}`;
+              valid = true;
+            }
+          } else if (def.targetType === 'any_unit') {
+            const targets = [0, 1, 2].filter(s => state.p1.board[s] !== null);
+            if (targets.length > 0) {
+              options = { targetSide: 'p1', targetSlot: targets[0] };
+              targetDesc = `Target: Your ${CARD_CATALOG[state.p1.board[targets[0]].cardId].name}`;
+              valid = true;
+            }
+          }
+
+          if (valid) {
+            consumeAction('tactical', def.actionCost || 1);
+            state.p2.hand.splice(i, 1);
+            state.p2.discard.push(cardItem);
+            renderGameUI();
+
+            const playerHasIntercept = state.p1.hand.some(c => c.cardId === 'intercept');
+            const countered = await showLocalTacticalReactionWindow(cardItem, targetDesc, playerHasIntercept);
+
+            if (countered) {
+              const p1IntIdx = state.p1.hand.findIndex(c => c.cardId === 'intercept');
+              if (p1IntIdx !== -1) {
+                const ic = state.p1.hand.splice(p1IntIdx, 1)[0];
+                state.p1.discard.push(ic);
+              }
+              addLog('tactical', `⚡ You discarded INTERCEPT and countered ${def.name}!`);
+            } else {
+              resolveTacticalEffect('p2', cardItem, options);
+            }
+            renderGameUI();
+            await sleepStep();
+            break;
+          }
+        }
+      }
+
+      if (state.winner) { isOpponentAnimating = false; renderGameUI(); return; }
+
+      // Step 4: Attack with an eligible AI unit
+      while (canTakeAction('attack') && !state.winner) {
+        const attackers = [0, 1, 2].filter(s => state.p2.board[s] && CARD_CATALOG[state.p2.board[s].cardId].canAttack);
+        if (attackers.length === 0) break;
+
+        let attacked = false;
+        for (const atkSlot of attackers) {
+          const atkCardId = state.p2.board[atkSlot].cardId;
+          const ignoreWall = atkCardId === 'airplane' || atkCardId === 'assassin';
+          const targets = [0, 1, 2].filter(t => state.p1.board[t] !== null && (ignoreWall || !isUnitProtectedByWall('p1', t, false)));
+          if (targets.length > 0) {
+            activeActorHighlight = { side: 'p2', slot: atkSlot };
+            renderGameUI();
+            await sleepStep(Math.max(250, getStepDelayMs() * 0.6));
+            executeAttack('p2', atkSlot, 'p1', targets[0], false);
+            await sleepStep();
+            activeActorHighlight = null;
+            attacked = true;
+            break;
+          }
+        }
+        if (!attacked) break;
+      }
+
+      isOpponentAnimating = false;
+      activeActorHighlight = null;
+      if (!state.winner) {
+        endCurrentTurn();
+      } else {
+        renderGameUI();
+      }
+    }
+
+    // =========================================================================
+    // 10. UI RENDERING & INTERACTION CONTROLLERS
+    // =========================================================================
+    function clearSelections() {
+      selectedHandIndex = null;
+      selectedAttackerSlot = null;
+    }
+
+    function cancelCurrentSelection() {
+      discardMode = false;
+      selectedDiscardIndices.clear();
+      clearSelections();
+      renderGameUI();
+    }
+
+    function toggleDiscardMode() {
+      const { isMyTurn } = getPerspective();
+      if (!isMyTurn || !canTakeAction('discard')) return;
+      discardMode = !discardMode;
+      selectedDiscardIndices.clear();
+      clearSelections();
+      renderGameUI();
+    }
+
+    function confirmDiscardClick() {
+      const { meKey, isMyTurn } = getPerspective();
+      if (!isMyTurn || !discardMode) return;
+      executeDiscardAction(meKey, Array.from(selectedDiscardIndices));
+    }
+
+    function handleMulliganClick() {
+      const { meKey, isMyTurn } = getPerspective();
+      if (isMyTurn) performMulligan(meKey);
+    }
+
+    function handleEndTurnClick() {
+      const { isMyTurn } = getPerspective();
+      if (!isMyTurn || state.pendingTactical) return;
+      endCurrentTurn();
+    }
+
+    function openSignalJamModal() {
+      const { oppKey, opp } = getPerspective();
+      const container = document.getElementById('signalJamSlots');
+      container.innerHTML = '';
+      const labels = ['LEFT', 'CENTER', 'RIGHT'];
+
+      [0, 1, 2].forEach(idx => {
+        const u = opp.board[idx];
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isFirst = signalJamFirstSlot === idx;
+        btn.className = `p-3 rounded-xl border-2 ${isFirst ? 'border-amber-400 bg-amber-500/20' : 'border-slate-700 bg-slate-950'} text-center cursor-pointer`;
+        btn.innerHTML = `
+          <div class="text-[10px] font-bold text-slate-400">${labels[idx]}</div>
+          <div class="text-xs font-extrabold text-white mt-1">${u ? CARD_CATALOG[u.cardId].name : 'Empty'}</div>
+        `;
+        btn.onclick = () => {
+          if (signalJamFirstSlot === null) {
+            signalJamFirstSlot = idx;
+            openSignalJamModal();
+          } else {
+            if (signalJamFirstSlot !== idx) {
+              [state[oppKey].board[signalJamFirstSlot], state[oppKey].board[idx]] = [state[oppKey].board[idx], state[oppKey].board[signalJamFirstSlot]];
+              addLog('tactical', `Signal Jam swapped enemy ${labels[signalJamFirstSlot]} and ${labels[idx]} slots.`);
+            }
+            signalJamFirstSlot = null;
+            openSignalJamModal();
+          }
+        };
+        container.appendChild(btn);
+      });
+
+      document.getElementById('signalJamModal').classList.remove('hidden');
+    }
+
+    function finishSignalJam() {
+      document.getElementById('signalJamModal').classList.add('hidden');
+      syncAndRender();
+    }
+
+    function renderGameUI() {
+      if (!state) return;
+      const { meKey, oppKey, me, opp, isMyTurn } = getPerspective();
+
+      document.getElementById('turnNumberDisplay').textContent = state.turnNumber;
+      document.getElementById('oppNameLabel').textContent = opp.name;
+      document.getElementById('oppHandCount').textContent = opp.hand.length;
+      document.getElementById('oppDeckCount').textContent = opp.deck.length;
+      document.getElementById('oppDiscardCount').textContent = opp.discard.length;
+
+      document.getElementById('playerHandCount').textContent = me.hand.length;
+      document.getElementById('playerDeckCount').textContent = me.deck.length;
+      document.getElementById('playerDiscardCount').textContent = me.discard.length;
+
+      // Gas Status Badges
+      const oppGasBadge = document.getElementById('oppGasBadge');
+      if (opp.gasTurnsRemaining > 0) {
+        oppGasBadge.classList.remove('hidden');
+        document.getElementById('oppGasTurns').textContent = opp.gasTurnsRemaining;
+      } else {
+        oppGasBadge.classList.add('hidden');
+      }
+
+      const playerGasBadge = document.getElementById('playerGasBadge');
+      if (me.gasTurnsRemaining > 0) {
+        playerGasBadge.classList.remove('hidden');
+        document.getElementById('playerGasTurns').textContent = me.gasTurnsRemaining;
+      } else {
+        playerGasBadge.classList.add('hidden');
+      }
+
+      // Score Pips
+      const renderPips = (containerId, score, activeColor) => {
+        const el = document.getElementById(containerId);
+        el.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          const pip = document.createElement('span');
+          pip.className = `w-2.5 h-2.5 rounded-sm ${i <= score ? activeColor : 'bg-slate-800 border border-slate-700'}`;
+          el.appendChild(pip);
+        }
+      };
+      renderPips('oppScorePips', opp.score, 'bg-rose-500');
+      document.getElementById('oppScoreText').textContent = `${opp.score}/5`;
+      renderPips('playerScorePips', me.score, 'bg-sky-400');
+      document.getElementById('playerScoreText').textContent = `${me.score}/5`;
+
+      // Turn & Prompt Bar
+      const turnBadge = document.getElementById('turnIndicatorBadge');
+      const promptText = document.getElementById('promptInstructionText');
+      const cancelBtn = document.getElementById('btnCancelSelection');
+
+      if (state.winner) {
+        turnBadge.textContent = 'MATCH OVER';
+        turnBadge.className = 'shrink-0 px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold text-[11px] uppercase tracking-wider';
+        promptText.textContent = state.winReason;
+        cancelBtn.classList.add('hidden');
+      } else if (!isMyTurn) {
+        turnBadge.textContent = 'ENEMY TURN';
+        turnBadge.className = 'shrink-0 px-2 py-0.5 rounded-md bg-rose-500 text-white font-extrabold text-[11px] uppercase tracking-wider';
+        promptText.textContent = `${opp.name} is executing tactical maneuvers...`;
+        cancelBtn.classList.add('hidden');
+      } else {
+        turnBadge.textContent = 'YOUR TURN';
+        turnBadge.className = 'shrink-0 px-2 py-0.5 rounded-md bg-sky-500 text-slate-950 font-extrabold text-[11px] uppercase tracking-wider';
+
+        if (discardMode) {
+          promptText.textContent = `Discard Mode: Select up to 3 cards in your hand (${selectedDiscardIndices.size}/3 selected).`;
+          cancelBtn.classList.remove('hidden');
+        } else if (selectedHandIndex !== null) {
+          const cDef = CARD_CATALOG[me.hand[selectedHandIndex].cardId];
+          if (cDef.type === 'unit') promptText.textContent = `Deploying ${cDef.name}: Click an empty Left, Center, or Right slot.`;
+          else if (cDef.type === 'equipment') promptText.textContent = `Equipping ${cDef.name}: Click one of your units to attach it.`;
+          else promptText.textContent = `Playing ${cDef.name}: Select a valid target unit on the battlefield.`;
+          cancelBtn.classList.remove('hidden');
+        } else if (selectedAttackerSlot !== null) {
+          const aDef = CARD_CATALOG[me.board[selectedAttackerSlot].cardId];
+          promptText.textContent = `${aDef.name} ready to attack: Click an enemy unit to strike.`;
+          cancelBtn.classList.remove('hidden');
+        } else {
+          promptText.textContent = 'Select a card in your hand or click one of your units to attack.';
+          cancelBtn.classList.add('hidden');
+        }
+      }
+
+      // Action Economy Pips & Category Badges
+      const actionPips = document.getElementById('actionPipsContainer');
+      actionPips.innerHTML = '';
+      for (let i = 1; i <= 3; i++) {
+        const pip = document.createElement('span');
+        pip.className = `w-3 h-3 rounded-full ${i <= state.actionsRemaining ? 'bg-amber-400 shadow-sm shadow-amber-400/50' : 'bg-slate-800 border border-slate-700'}`;
+        actionPips.appendChild(pip);
+      }
+
+      const catContainer = document.getElementById('actionCategoryBadges');
+      const categories = [
+        { key: 'unit', label: 'Unit' },
+        { key: 'tactical', label: 'Tactical' },
+        { key: 'equipment', label: 'Equip' },
+        { key: 'attack', label: 'Attack' },
+        { key: 'discard', label: 'Discard' }
+      ];
+      catContainer.innerHTML = categories.map(cat => {
+        const used = state.usedActions[cat.key];
+        return `<span class="px-1.5 py-0.5 rounded border ${used ? 'bg-slate-950 border-slate-800 text-slate-600 line-through' : 'bg-slate-800/80 border-slate-700 text-slate-300'}">${cat.label}</span>`;
+      }).join('');
+
+      const bonusContainer = document.getElementById('bonusActionBadges');
+      let bonusHtml = '';
+      if (state.bonusActions.unit > 0) bonusHtml += `<span class="px-2 py-0.5 rounded bg-sky-500/20 border border-sky-500/40 text-sky-300 text-[10px] font-bold">+${state.bonusActions.unit} Free Unit</span>`;
+      if (state.bonusActions.attack > 0) bonusHtml += `<span class="px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] font-bold">+${state.bonusActions.attack} Free Attack</span>`;
+      bonusContainer.innerHTML = bonusHtml;
+
+      // Action Buttons Visibility
+      const mulliganBtn = document.getElementById('btnMulligan');
+      if (isMyTurn && me.mulliganAvailable && !state.hasTakenAnyActionThisTurn && state.turnNumber <= 2) {
+        mulliganBtn.classList.remove('hidden');
+      } else {
+        mulliganBtn.classList.add('hidden');
+      }
+
+      const toggleDiscardBtn = document.getElementById('btnToggleDiscardMode');
+      const confirmDiscardBtn = document.getElementById('btnConfirmDiscard');
+      toggleDiscardBtn.textContent = discardMode ? `Cancel Discard (${selectedDiscardIndices.size}/3)` : `Discard Cards (0/3)`;
+      toggleDiscardBtn.disabled = !isMyTurn || (!discardMode && !canTakeAction('discard'));
+      toggleDiscardBtn.classList.toggle('opacity-40', toggleDiscardBtn.disabled);
+
+      if (discardMode && selectedDiscardIndices.size > 0) {
+        confirmDiscardBtn.classList.remove('hidden');
+      } else {
+        confirmDiscardBtn.classList.add('hidden');
+      }
+
+      const endTurnBtn = document.getElementById('btnEndTurn');
+      endTurnBtn.disabled = !isMyTurn;
+      endTurnBtn.classList.toggle('opacity-40', !isMyTurn);
+
+      // Render Board Slots
+      renderBoardSide(oppKey, 'enemyBoardSlots', true);
+      renderBoardSide(meKey, 'playerBoardSlots', false);
+
+      // Render Hand, Dice Tray & Log
+      renderHand();
+      renderDiceTray();
+      renderLog();
+
+      // Online Pending Tactical Reaction Window
+      if (gameMode === 'online' && state.pendingTactical && state.pendingTactical.casterSideKey !== localRole) {
+        const { cardItem, options } = state.pendingTactical;
+        const def = CARD_CATALOG[cardItem.cardId];
+        document.getElementById('interceptCardName').textContent = def.name;
+        document.getElementById('interceptCardCost').textContent = `${def.actionCost || 1} Action`;
+        document.getElementById('interceptCardEffect').textContent = def.effectText;
+        document.getElementById('interceptCardTargetInfo').textContent = options && options.targetSlot !== undefined ? `Target Slot: ${['Left', 'Center', 'Right'][options.targetSlot]}` : '';
+        document.getElementById('interceptChoiceButtons').classList.remove('hidden');
+        document.getElementById('interceptAcknowledgeContainer').classList.add('hidden');
+        document.getElementById('interceptModal').classList.remove('hidden');
+      }
+
+      // Game Over Modal
+      if (state.winner) {
+        const won = state.winner === localRole;
+        const badge = document.getElementById('gameOverBadge');
+        badge.textContent = won ? 'VICTORY' : 'DEFEAT';
+        badge.className = `inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest ${won ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`;
+        document.getElementById('gameOverTitle').textContent = won ? 'Frontline Secured!' : 'Frontline Breached';
+        document.getElementById('gameOverReason').textContent = state.winReason;
+        document.getElementById('finalPlayerScore').textContent = me.score;
+        document.getElementById('finalOppScore').textContent = opp.score;
+        document.getElementById('gameOverModal').classList.remove('hidden');
+      }
+    }
+
+    function renderBoardSide(sideKey, containerId, isEnemySide) {
+      const { meKey, oppKey, me, isMyTurn } = getPerspective();
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      const labels = ['LEFT', 'CENTER', 'RIGHT'];
+
+      for (let i = 0; i < 3; i++) {
+        const unitObj = state[sideKey].board[i];
+        const isWallProtected = unitObj ? isUnitProtectedByWall(sideKey, i, false) : false;
+        const isSelectedAttacker = !isEnemySide && selectedAttackerSlot === i;
+        const isHighlightedActor = activeActorHighlight && activeActorHighlight.side === sideKey && activeActorHighlight.slot === i;
+
+        let isValidTarget = false;
+        if (isMyTurn && !discardMode) {
+          if (selectedHandIndex !== null) {
+            const cDef = CARD_CATALOG[me.hand[selectedHandIndex].cardId];
+            if (cDef.type === 'unit' && !isEnemySide && unitObj === null) isValidTarget = true;
+            if (cDef.type === 'equipment' && !isEnemySide && unitObj !== null && !CARD_CATALOG[unitObj.cardId].cannotEquip) isValidTarget = true;
+            if (cDef.type === 'tactical') {
+              if (cDef.targetType === 'any_unit' && unitObj !== null) isValidTarget = true;
+              if (cDef.targetType === 'enemy_unit' && isEnemySide && unitObj !== null) isValidTarget = true;
+              if (cDef.targetType === 'enemy_equipped_unit' && isEnemySide && unitObj !== null && unitObj.equipments.length > 0) isValidTarget = true;
+            }
+          } else if (selectedAttackerSlot !== null && isEnemySide && unitObj !== null) {
+            const atkId = me.board[selectedAttackerSlot].cardId;
+            const ignoreWall = atkId === 'airplane' || atkId === 'assassin';
+            if (ignoreWall || !isWallProtected) isValidTarget = true;
+          }
+        }
+
+        const slotEl = createBoardSlotElement(sideKey, i, labels[i], unitObj, isValidTarget, isWallProtected, isSelectedAttacker, isHighlightedActor);
+        slotEl.onclick = () => handleBoardSlotClick(sideKey, i);
+        container.appendChild(slotEl);
+      }
+    }
+
+    function createBoardSlotElement(sideKey, slotIdx, label, unitObj, isValidTarget, isWallProtected, isSelectedAttacker, isHighlightedActor = false) {
+      const div = document.createElement('div');
+      const baseBorder = isHighlightedActor
+        ? 'actor-highlight bg-amber-950/30'
+        : isSelectedAttacker
+        ? 'border-amber-400 ring-2 ring-amber-400/50 bg-slate-900'
+        : isValidTarget
+        ? 'border-sky-400 target-pulse bg-slate-900 cursor-pointer'
+        : 'border-slate-800 bg-slate-900/60';
+
+      div.className = `rounded-xl border-2 ${baseBorder} p-2 min-h-[140px] flex flex-col justify-between transition relative select-none`;
+
+      if (!unitObj) {
+        div.innerHTML = `
+          <div class="flex items-center justify-between text-[10px] font-bold text-slate-600">
+            <span>${label}</span>
+            ${isValidTarget ? '<span class="text-sky-400 animate-pulse">DEPLOY HERE</span>' : ''}
+          </div>
+          <div class="flex-1 flex items-center justify-center">
+            <span class="text-[11px] font-mono-dice text-slate-700">${isValidTarget ? '+ Place Unit' : 'Empty'}</span>
+          </div>
+        `;
+        return div;
+      }
+
+      const def = CARD_CATALOG[unitObj.cardId];
+      const stats = getEffectiveUnitStats(sideKey, slotIdx, false, false);
+      const factionPip = def.faction === 'IV'
+        ? '<span class="px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 text-[8px] font-extrabold">IV</span>'
+        : def.faction === 'AA'
+        ? '<span class="px-1 py-0.2 rounded bg-orange-500/20 text-orange-300 text-[8px] font-extrabold">AA</span>'
+        : '';
+
+      const equipsHtml = unitObj.equipments.map(eq => {
+        const eqDef = CARD_CATALOG[eq.cardId];
+        return `
+          <div class="mt-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/40 text-[10px] flex items-center justify-between">
+            <span class="font-bold text-amber-300 truncate">${eqDef.name}</span>
+            <span class="font-mono-dice text-amber-200 ml-1 shrink-0">${eqDef.statBadge}</span>
+          </div>
+        `;
+      }).join('');
+
+      div.innerHTML = `
+        <div>
+          <div class="flex items-center justify-between gap-1 mb-0.5">
+            <div class="flex items-center gap-1">
+              <span class="text-[9px] font-extrabold tracking-wider text-slate-500">${label}</span>
+              ${factionPip}
+            </div>
+            <div class="flex items-center gap-1">
+              ${isWallProtected ? '<span class="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[9px] font-bold">🛡 Wall</span>' : ''}
+              ${unitObj.medicUsed ? '<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[9px]">Medic Used</span>' : ''}
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <h4 class="font-extrabold text-xs sm:text-sm text-white truncate">${def.name}</h4>
+            ${def.canAttack ? '<span class="text-[10px] text-rose-400 font-bold">⚔</span>' : '<span class="text-[10px] text-slate-500">No Atk</span>'}
+          </div>
+
+          ${def.effectText ? `<p class="text-[10px] text-slate-300 leading-snug mt-1 bg-slate-950/70 p-1 rounded border border-slate-800/80">${def.effectText}</p>` : ''}
+        </div>
+
+        <div class="mt-1.5">
+          <div class="grid grid-cols-2 gap-1 text-[10px] font-mono-dice bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <div class="flex justify-between px-1">
+              <span class="text-slate-400">⊕Acc</span>
+              <span class="font-bold text-sky-300">${stats.acc}D6</span>
+            </div>
+            <div class="flex justify-between px-1">
+              <span class="text-slate-400">⚔Dmg</span>
+              <span class="font-bold text-rose-300">${stats.dmg}D6${stats.dmgBonus ? '+' + stats.dmgBonus : ''}</span>
+            </div>
+            <div class="flex justify-between px-1">
+              <span class="text-slate-400">🏃Eva</span>
+              <span class="font-bold text-emerald-300">${stats.eva}D6</span>
+            </div>
+            <div class="flex justify-between px-1">
+              <span class="text-slate-400">🛡Def</span>
+              <span class="font-bold text-amber-300">${stats.def}D6${stats.flatDefBonus ? '+' + stats.flatDefBonus : ''}</span>
+            </div>
+          </div>
+          ${equipsHtml}
+        </div>
+      `;
+
+      return div;
+    }
+
+    function handleBoardSlotClick(clickedSideKey, slotIdx) {
+      const { meKey, oppKey, me, isMyTurn } = getPerspective();
+      if (!isMyTurn || discardMode) return;
+
+      if (selectedHandIndex !== null) {
+        const cardItem = me.hand[selectedHandIndex];
+        const def = CARD_CATALOG[cardItem.cardId];
+
+        if (def.type === 'unit' && clickedSideKey === meKey) {
+          playUnitCard(meKey, selectedHandIndex, slotIdx);
+          return;
+        }
+        if (def.type === 'equipment' && clickedSideKey === meKey) {
+          playEquipmentCard(meKey, selectedHandIndex, meKey, slotIdx);
+          return;
+        }
+        if (def.type === 'tactical') {
+          if (def.targetType === 'any_unit' && state[clickedSideKey].board[slotIdx] !== null) {
+            playTacticalCard(meKey, selectedHandIndex, { targetSide: clickedSideKey, targetSlot: slotIdx });
+            return;
+          }
+          if (def.targetType === 'enemy_unit' && clickedSideKey === oppKey && state[oppKey].board[slotIdx] !== null) {
+            playTacticalCard(meKey, selectedHandIndex, { targetSide: oppKey, targetSlot: slotIdx });
+            return;
+          }
+          if (def.targetType === 'enemy_equipped_unit' && clickedSideKey === oppKey && state[oppKey].board[slotIdx] && state[oppKey].board[slotIdx].equipments.length > 0) {
+            playTacticalCard(meKey, selectedHandIndex, { targetSide: oppKey, targetSlot: slotIdx });
+            return;
+          }
+        }
+        return;
+      }
+
+      if (selectedAttackerSlot !== null && clickedSideKey === oppKey && state[oppKey].board[slotIdx] !== null) {
+        executeAttack(meKey, selectedAttackerSlot, oppKey, slotIdx);
+        return;
+      }
+
+      if (clickedSideKey === meKey && me.board[slotIdx] !== null) {
+        const unitDef = CARD_CATALOG[me.board[slotIdx].cardId];
+        if (!unitDef.canAttack) {
+          showToast(`${unitDef.name} has no attack stat and cannot initiate attacks.`);
+          return;
+        }
+        if (!canTakeAction('attack')) {
+          showToast('You have already attacked this turn!');
+          return;
+        }
+        selectedAttackerSlot = (selectedAttackerSlot === slotIdx) ? null : slotIdx;
+        renderGameUI();
+      }
+    }
+
+    function renderHand() {
+      const { meKey, me, isMyTurn } = getPerspective();
+      const container = document.getElementById('playerHandContainer');
+      container.innerHTML = '';
+
+      me.hand.forEach((cardItem, idx) => {
+        const def = CARD_CATALOG[cardItem.cardId];
+        const isSelected = (!discardMode && selectedHandIndex === idx) || (discardMode && selectedDiscardIndices.has(idx));
+
+        const typeStyles = {
+          unit: { badge: 'UNIT', badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40', border: 'border-slate-700' },
+          equipment: { badge: 'EQUIP', badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40', border: 'border-amber-700/50' },
+          tactical: { badge: 'TACTICAL', badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/40', border: 'border-purple-700/50' }
+        }[def.type];
+
+        const factionBadgeHtml = def.faction === 'IV'
+          ? '<span class="px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/40 text-[8px] font-extrabold text-sky-300">IV</span>'
+          : def.faction === 'AA'
+          ? '<span class="px-1.5 py-0.5 rounded bg-orange-500/20 border border-orange-500/40 text-[8px] font-extrabold text-orange-300">AA</span>'
+          : '<span class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[8px] font-bold text-zinc-400">NEU</span>';
+
+        const cardEl = document.createElement('div');
+        cardEl.className = `hand-card game-card shrink-0 w-40 sm:w-44 rounded-xl border-2 ${isSelected ? 'border-amber-400 -translate-y-2.5 shadow-xl shadow-amber-500/20' : typeStyles.border} bg-slate-950 p-2.5 flex flex-col justify-between cursor-pointer select-none`;
+
+        let bodyHtml = '';
+        if (def.type === 'unit') {
+          bodyHtml = `
+            ${def.effectText ? `<p class="text-[10px] text-slate-300 leading-snug my-1 bg-slate-900 p-1.5 rounded border border-slate-800">${def.effectText}</p>` : '<div class="flex-1"></div>'}
+            <div class="grid grid-cols-2 gap-1 text-[10px] font-mono-dice bg-slate-900 p-1.5 rounded-lg border border-slate-800 mt-1">
+              <div><span class="text-slate-400">⊕</span> <strong class="text-sky-300">${def.acc}D6</strong></div>
+              <div><span class="text-slate-400">⚔</span> <strong class="text-rose-300">${def.dmg}D6${def.dmgBonus ? '+' + def.dmgBonus : ''}</strong></div>
+              <div><span class="text-slate-400">🏃</span> <strong class="text-emerald-300">${def.eva}D6</strong></div>
+              <div><span class="text-slate-400">🛡</span> <strong class="text-amber-300">${def.def}D6</strong></div>
+            </div>
+          `;
+        } else if (def.type === 'equipment') {
+          bodyHtml = `
+            <p class="text-[10px] text-slate-300 leading-snug my-1.5">${def.effectText}</p>
+            <div class="px-2 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-center font-mono-dice text-[11px] font-bold text-amber-300">
+              ${def.statBadge}
+            </div>
+          `;
+        } else {
+          bodyHtml = `
+            <p class="text-[10px] text-slate-300 leading-snug my-1.5 flex-1">${def.effectText}</p>
+            <div class="text-[10px] font-mono-dice text-purple-300 font-bold text-right">
+              ${def.actionCost === 0 ? 'Reaction' : def.actionCost + ' Action' + (def.actionCost > 1 ? 's' : '')}
+            </div>
+          `;
+        }
+
+        cardEl.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <span class="px-1.5 py-0.5 rounded border text-[9px] font-extrabold ${typeStyles.badgeClass}">${typeStyles.badge}</span>
+              ${factionBadgeHtml}
+            </div>
+            <h4 class="font-extrabold text-xs sm:text-sm text-white leading-tight">${def.name}</h4>
+          </div>
+          ${bodyHtml}
+        `;
+
+        cardEl.onclick = () => {
+          if (!isMyTurn) {
+            showToast('Wait for your turn to play cards.');
+            return;
+          }
+          if (discardMode) {
+            if (selectedDiscardIndices.has(idx)) {
+              selectedDiscardIndices.delete(idx);
+            } else if (selectedDiscardIndices.size < 3) {
+              selectedDiscardIndices.add(idx);
+            } else {
+              showToast('You can discard at most 3 cards per action.');
+            }
+            renderGameUI();
+            return;
+          }
+
+          selectedAttackerSlot = null;
+          if (selectedHandIndex === idx) {
+            selectedHandIndex = null;
+            renderGameUI();
+            return;
+          }
+
+          if (def.type === 'unit' && !canTakeAction('unit')) {
+            showToast('You already played a Unit this turn!');
+            return;
+          }
+          if (def.type === 'equipment' && !canTakeAction('equipment')) {
+            showToast('You already equipped an Equipment this turn!');
+            return;
+          }
+          if (def.type === 'tactical') {
+            if (cardItem.cardId === 'intercept') {
+              showToast('Intercept stays in hand and triggers automatically when your opponent plays a Tactical card!');
+              return;
+            }
+            if (state.usedActions.tactical) {
+              showToast('You already played a Tactical card this turn!');
+              return;
+            }
+            if (state.actionsRemaining < (def.actionCost || 1)) {
+              showToast(`${def.name} requires ${def.actionCost} actions.`);
+              return;
+            }
+            if (def.targetType === 'none') {
+              playTacticalCard(meKey, idx, {});
+              return;
+            }
+          }
+
+          selectedHandIndex = idx;
+          renderGameUI();
+        };
+
+        container.appendChild(cardEl);
+      });
+    }
+
+    function renderDiceTray() {
+      const container = document.getElementById('diceTrayContent');
+      if (!state || !state.lastDiceRoll) {
+        container.innerHTML = `<p class="text-slate-500 text-center italic">Every individual die rolled will appear here for 100% transparency.</p>`;
+        return;
+      }
+
+      const d = state.lastDiceRoll;
+      const formatRolls = (r) => {
+        const diceBadges = r.rolls.map(v => `<span class="inline-flex items-center justify-center w-5 h-5 rounded bg-slate-800 border border-slate-600 text-white font-bold text-[11px]">${v}</span>`).join(' ');
+        const droppedStr = r.dropped !== null ? `<span class="text-[10px] text-slate-500 line-through ml-1">(${r.dropped})</span>` : '';
+        const bonusStr = r.bonus ? `<span class="text-emerald-400 font-bold ml-1">+${r.bonus}</span>` : '';
+        return `${diceBadges || '<span class="text-slate-500">0</span>'}${droppedStr}${bonusStr} = <strong class="text-white text-xs">${r.total}</strong>`;
+      };
+
+      let html = `<div class="font-extrabold text-amber-300 text-[11px] mb-1 border-b border-slate-800 pb-1">${d.title}</div>`;
+
+      if (d.hitStep) {
+        html += `
+          <div class="mb-1.5 space-y-1">
+            <div class="flex items-center justify-between text-[10px] text-slate-400">
+              <span>1. Hit Check</span>
+              <span class="font-bold ${d.hitStep.isHit ? 'text-emerald-400' : 'text-rose-400'}">${d.hitStep.isHit ? 'HIT!' : 'MISSED'}</span>
+            </div>
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] text-sky-300 truncate">${d.hitStep.atkLabel}:</span>
+              <div class="font-mono-dice">${formatRolls(d.hitStep.atkRoll)}</div>
+            </div>
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] text-emerald-300 truncate">${d.hitStep.defLabel}:</span>
+              <div class="font-mono-dice">${formatRolls(d.hitStep.defRoll)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (d.dmgStep) {
+        html += `
+          <div class="space-y-1 ${d.hitStep ? 'pt-1 border-t border-slate-800/80' : ''}">
+            <div class="flex items-center justify-between text-[10px] text-slate-400">
+              <span>${d.hitStep ? '2. Damage Check' : 'Direct Damage'} ${d.dmgStep.medicSaved ? '(Medic Rerolled!)' : ''}</span>
+              <span class="font-bold ${d.dmgStep.killed ? 'text-rose-400' : 'text-sky-300'}">${d.dmgStep.killed ? 'DESTROYED (+1 Pt)' : 'DEFENDED'}</span>
+            </div>
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] text-rose-300 truncate">${d.dmgStep.atkLabel}:</span>
+              <div class="font-mono-dice">${formatRolls(d.dmgStep.atkRoll)}</div>
+            </div>
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] text-amber-300 truncate">${d.dmgStep.defLabel}:</span>
+              <div class="font-mono-dice">${formatRolls(d.dmgStep.defRoll)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderLog() {
+      const container = document.getElementById('battleLogContainer');
+      if (!state) return;
+      container.innerHTML = state.log.map(entry => {
+        const colors = {
+          system: 'text-amber-300 font-bold',
+          combat: 'text-rose-300',
+          tactical: 'text-purple-300',
+          play: 'text-sky-300',
+          info: 'text-slate-300'
+        };
+        return `<div class="${colors[entry.type] || 'text-slate-300'} leading-snug">&gt; ${entry.text}</div>`;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // =========================================================================
+    // 11. DECK BUILDER, FACTION SELECTOR & NAVIGATION CONTROLS
+    // =========================================================================
+    function updateMenuDeckSummary() {
+      const ivTotal = getDeckTotalCount(ivDeckCounts);
+      const aaTotal = getDeckTotalCount(aaDeckCounts);
+      const desTotal = getDeckTotalCount(desDeckCounts);
+      const activeTotal = getDeckTotalCount(getActivePlayerDeckCounts());
+      const activeShort = selectedFaction === 'vanguard' ? 'Iron Vanguard' : selectedFaction === 'accord' ? 'Ashen Accord' : 'The Deserters';
+
+      document.getElementById('headerDeckCount').textContent = `${activeTotal}/30`;
+      document.getElementById('menuDeckTitle').textContent =
+        `Active: ${activeShort} (${activeTotal}/30) • IV: ${ivTotal} | AA: ${aaTotal} | DES: ${desTotal}`;
+    }
+
+    function openDeckModal(initialTab = selectedFaction) {
+      editingDeckFaction = initialTab;
+      renderDeckBuilderModal();
+      document.getElementById('deckModal').classList.remove('hidden');
+    }
+
+    function closeDeckModal() {
+      document.getElementById('deckModal').classList.add('hidden');
+    }
+
+    function switchDeckBuilderTab(factionKey) {
+      editingDeckFaction = factionKey;
+      renderDeckBuilderModal();
+    }
+
+    function resetCurrentFactionDeck() {
+      if (editingDeckFaction === 'vanguard') {
+        ivDeckCounts = getDefaultIVDeck();
+        showToast('The Iron Vanguard deck reset to its 30-card preset.');
+      } else if (editingDeckFaction === 'accord') {
+        aaDeckCounts = getDefaultAADeck();
+        showToast('The Ashen Accord deck reset to its 30-card preset.');
+      } else {
+        desDeckCounts = getDefaultDesertersDeck();
+        showToast('The Deserters deck reset to its 30-card hybrid preset.');
+      }
+      saveFactionDecks();
+      renderDeckBuilderModal();
+    }
+
+    function modifyDeckCardCount(cardId, delta) {
+      const maxAllowed = getMaxCopiesForFaction(cardId, editingDeckFaction);
+      if (maxAllowed === 0) return;
+      const targetDeck = getDeckCountsForFaction(editingDeckFaction);
+      const current = targetDeck[cardId] || 0;
+      const next = current + delta;
+      if (next >= 0 && next <= maxAllowed) {
+        targetDeck[cardId] = next;
+        saveFactionDecks();
+        renderDeckBuilderModal();
+      }
+    }
+
+    function renderDeckBuilderModal() {
+      const ivTotal = getDeckTotalCount(ivDeckCounts);
+      const aaTotal = getDeckTotalCount(aaDeckCounts);
+      const desTotal = getDeckTotalCount(desDeckCounts);
+      const currentCounts = getDeckCountsForFaction(editingDeckFaction);
+      const totalCards = getDeckTotalCount(currentCounts);
+
+      document.getElementById('tabCountIV').textContent = ivTotal;
+      document.getElementById('tabCountAA').textContent = aaTotal;
+      document.getElementById('tabCountDES').textContent = desTotal;
+
+      const tabIV = document.getElementById('btnDeckTabIV');
+      const tabAA = document.getElementById('btnDeckTabAA');
+      const tabDES = document.getElementById('btnDeckTabDES');
+      const lockHint = document.getElementById('deckBuilderLockHint');
+
+      const inactiveTabClass = 'px-3 py-2 rounded-xl border-2 border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 font-stencil text-xs tracking-wide transition cursor-pointer';
+      tabIV.className = inactiveTabClass;
+      tabAA.className = inactiveTabClass;
+      tabDES.className = inactiveTabClass;
+
+      if (editingDeckFaction === 'vanguard') {
+        tabIV.className = 'px-3 py-2 rounded-xl border-2 border-sky-400 bg-sky-500/20 text-sky-200 font-stencil text-xs tracking-wide transition cursor-pointer';
+        lockHint.textContent = 'Iron Vanguard: Max 3 IV exclusives • Max 2 Neutral • AA locked';
+        lockHint.className = 'text-[11px] text-sky-300/90 ml-auto font-medium';
+      } else if (editingDeckFaction === 'accord') {
+        tabAA.className = 'px-3 py-2 rounded-xl border-2 border-orange-500 bg-orange-500/20 text-orange-200 font-stencil text-xs tracking-wide transition cursor-pointer';
+        lockHint.textContent = 'Ashen Accord: Max 3 AA exclusives • Max 2 Neutral • IV locked';
+        lockHint.className = 'text-[11px] text-orange-300/90 ml-auto font-medium';
+      } else {
+        tabDES.className = 'px-3 py-2 rounded-xl border-2 border-lime-400 bg-lime-500/20 text-lime-200 font-stencil text-xs tracking-wide transition cursor-pointer';
+        lockHint.textContent = 'The Deserters: All cards unlocked • Max 1 per IV/AA exclusive • Max 2 Neutral';
+        lockHint.className = 'text-[11px] text-lime-300/90 ml-auto font-medium';
+      }
+
+      const counterEl = document.getElementById('modalDeckCounter');
+      counterEl.textContent = `${totalCards} / 30 Cards`;
+      counterEl.className = `px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 font-mono-dice text-xs font-extrabold ${totalCards === 30 ? 'text-emerald-400' : 'text-amber-400'}`;
+
+      updateMenuDeckSummary();
+
+      const renderSetGrid = (ids, gridId) => {
+        const grid = document.getElementById(gridId);
+        grid.innerHTML = '';
+        ids.forEach(id => {
+          const def = CARD_CATALOG[id];
+          const maxAllowed = getMaxCopiesForFaction(id, editingDeckFaction);
+          const allowed = maxAllowed > 0;
+          const qty = allowed ? (currentCounts[id] || 0) : 0;
+
+          const statSummary = def.type === 'unit'
+            ? `⊕${def.acc}D6 | ⚔${def.dmg}D6${def.dmgBonus ? '+' + def.dmgBonus : ''} | 🏃${def.eva}D6 | 🛡${def.def}D6`
+            : def.type === 'equipment'
+            ? def.statBadge
+            : `${def.actionCost === 0 ? 'Reaction' : def.actionCost + ' Action(s)'}`;
+
+          const factionBadge = def.faction === 'IV'
+            ? '<span class="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/40 text-sky-300">Iron Vanguard</span>'
+            : def.faction === 'AA'
+            ? '<span class="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-orange-500/20 border border-orange-500/40 text-orange-300">Ashen Accord</span>'
+            : '<span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">Neutral</span>';
+
+          const item = document.createElement('div');
+          if (!allowed) {
+            item.className = 'rounded-xl border border-slate-800/60 bg-slate-950/30 opacity-45 p-3 flex flex-col justify-between gap-2 select-none';
+            item.innerHTML = `
+              <div>
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="font-extrabold text-sm text-slate-400">${def.name}</span>
+                  ${factionBadge}
+                </div>
+                <div class="text-[11px] font-mono-dice text-slate-500 mt-1">${statSummary}</div>
+                ${def.effectText ? `<p class="text-[11px] text-slate-500 mt-1 leading-snug">${def.effectText}</p>` : ''}
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800/60">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400/80">🔒 Restricted to ${def.faction === 'IV' ? 'Iron Vanguard & Deserters' : 'Ashen Accord & Deserters'}</span>
+              </div>
+            `;
+          } else {
+            item.className = `rounded-xl border ${qty > 0 ? 'border-slate-700 bg-slate-950' : 'border-slate-800/70 bg-slate-950/50 opacity-80'} p-3 flex flex-col justify-between gap-2`;
+            item.innerHTML = `
+              <div>
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="font-extrabold text-sm text-white">${def.name}</span>
+                  <div class="flex items-center gap-1">
+                    ${factionBadge}
+                    <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">${def.type}</span>
+                  </div>
+                </div>
+                <div class="text-[11px] font-mono-dice text-sky-400 mt-1">${statSummary}</div>
+                ${def.effectText ? `<p class="text-[11px] text-slate-400 mt-1 leading-snug">${def.effectText}</p>` : ''}
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <span class="text-[11px] text-slate-400">In Deck (Max ${maxAllowed}):</span>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="modifyDeckCardCount('${id}', -1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold cursor-pointer">-</button>
+                  <span class="font-mono-dice font-extrabold text-sm text-white w-8 text-center">${qty}/${maxAllowed}</span>
+                  <button type="button" onclick="modifyDeckCardCount('${id}', 1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold cursor-pointer">+</button>
+                </div>
+              </div>
+            `;
+          }
+          grid.appendChild(item);
+        });
+      };
+
+      renderSetGrid(STARTER_IDS, 'starterCardsGrid');
+      renderSetGrid(EXPANSION_IDS, 'expansionCardsGrid');
+    }
+
+    function openRulesModal() {
+      document.getElementById('rulesModal').classList.remove('hidden');
+    }
+
+    function closeRulesModal() {
+      document.getElementById('rulesModal').classList.add('hidden');
+    }
+
+    function selectFaction(faction) {
+      selectedFaction = faction;
+      editingDeckFaction = faction;
+      const vanguardBtn = document.getElementById('btnSelectVanguard');
+      const accordBtn = document.getElementById('btnSelectAccord');
+      const desertersBtn = document.getElementById('btnSelectDeserters');
+
+      vanguardBtn.className = 'faction-card group rounded-xl border-2 border-zinc-800 hover:border-sky-400/60 bg-gradient-to-b from-slate-900/90 to-zinc-950 p-3.5 transition cursor-pointer opacity-80 hover:opacity-100 flex flex-col justify-between';
+      accordBtn.className = 'faction-card group rounded-xl border-2 border-zinc-800 hover:border-orange-500/60 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition cursor-pointer opacity-80 hover:opacity-100 flex flex-col justify-between';
+      desertersBtn.className = 'faction-card group rounded-xl border-2 border-zinc-800 hover:border-lime-500/60 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-3.5 transition cursor-pointer opacity-80 hover:opacity-100 flex flex-col justify-between';
+
+      if (faction === 'vanguard') {
+        vanguardBtn.className = 'faction-card group rounded-xl border-2 border-sky-400/80 bg-gradient-to-b from-slate-800/90 to-zinc-950 p-3.5 transition cursor-pointer shadow-[0_0_25px_rgba(56,189,248,0.18)] flex flex-col justify-between';
+      } else if (faction === 'accord') {
+        accordBtn.className = 'faction-card group rounded-xl border-2 border-orange-500/90 bg-gradient-to-b from-orange-950/50 to-zinc-950 p-3.5 transition cursor-pointer shadow-[0_0_25px_rgba(249,115,22,0.22)] flex flex-col justify-between';
+      } else {
+        desertersBtn.className = 'faction-card group rounded-xl border-2 border-lime-400/85 bg-gradient-to-b from-lime-950/40 to-zinc-950 p-3.5 transition cursor-pointer shadow-[0_0_25px_rgba(132,204,22,0.22)] flex flex-col justify-between';
+      }
+      updateMenuDeckSummary();
+    }
+
+    function enterGameView() {
+      document.getElementById('menuView').classList.add('hidden');
+      document.getElementById('lobbyOverlay').classList.add('hidden');
+      document.getElementById('guestJoinOverlay').classList.add('hidden');
+      document.getElementById('gameOverModal').classList.add('hidden');
+      document.getElementById('gameView').classList.remove('hidden');
+      document.getElementById('btnReturnMenu').classList.remove('hidden');
+      document.getElementById('btnStepSpeed').classList.remove('hidden');
+      clearSelections();
+      discardMode = false;
+      selectedDiscardIndices.clear();
+      renderGameUI();
+    }
+
+    function returnToMainMenu() {
+      cleanupWebRTC();
+      state = null;
+      isOpponentAnimating = false;
+      activeActorHighlight = null;
+      localInterceptResolver = null;
+      document.getElementById('gameView').classList.add('hidden');
+      document.getElementById('gameOverModal').classList.add('hidden');
+      document.getElementById('interceptModal').classList.add('hidden');
+      document.getElementById('signalJamModal').classList.add('hidden');
+      document.getElementById('lobbyOverlay').classList.add('hidden');
+      document.getElementById('guestJoinOverlay').classList.add('hidden');
+      document.getElementById('btnReturnMenu').classList.add('hidden');
+      document.getElementById('btnStepSpeed').classList.add('hidden');
+      document.getElementById('menuView').classList.remove('hidden');
+      updateMenuDeckSummary();
+    }
+
+    function startSoloAIMatch() {
+      const playerDeck = getActivePlayerDeckCounts();
+      const totalCards = getDeckTotalCount(playerDeck);
+      const playerTitle = getFactionDisplayName(selectedFaction);
+
+      if (totalCards !== 30) {
+        showToast(`${playerTitle} deck has ${totalCards}/30 cards. Complete it in Edit Arsenal first!`);
+        openDeckModal(selectedFaction);
+        return;
+      }
+
+      const rivalFactions = ['vanguard', 'accord', 'deserters'].filter(f => f !== selectedFaction);
+      const enemyFaction = rivalFactions[cryptoRandomInt(0, rivalFactions.length - 1)];
+      const enemyTitle = `${getFactionDisplayName(enemyFaction)} (AI)`;
+
+      const savedEnemyDeck = getDeckCountsForFaction(enemyFaction);
+      const fallbackEnemyDeck = enemyFaction === 'vanguard'
+        ? getDefaultIVDeck()
+        : enemyFaction === 'accord'
+        ? getDefaultAADeck()
+        : getDefaultDesertersDeck();
+      const enemyDeck = getDeckTotalCount(savedEnemyDeck) === 30 ? savedEnemyDeck : fallbackEnemyDeck;
+
+      gameMode = 'ai';
+      localRole = 'p1';
+      state = createInitialGameState('ai', playerTitle, enemyTitle, playerDeck, enemyDeck);
+      enterGameView();
+    }
+
+    function playAgainClick() {
+      document.getElementById('gameOverModal').classList.add('hidden');
+      if (gameMode === 'ai') {
+        startSoloAIMatch();
+      } else {
+        returnToMainMenu();
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      banner.textContent = msg;
+      banner.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3200);
+    }
+
+    // Initialize menu counters on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      selectFaction('vanguard');
+      updateMenuDeckSummary();
+    });
+    if (document.readyState !== 'loading') {
+      selectFaction('vanguard');
+      updateMenuDeckSummary();
+    }
+  </script>
+</body>
+</html>
